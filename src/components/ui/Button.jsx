@@ -1,4 +1,5 @@
 import { cn } from '@/utils/cn'
+import SvgIcon from '@/components/ui/SvgIcon'
 
 const variants = {
   primary:
@@ -23,6 +24,9 @@ function Button({
   type = 'button',
   variant = 'primary',
   size = 'md',
+  icon,
+  iconPosition = 'right',
+  iconSize = 16,
   className,
   children,
   onClick,
@@ -40,13 +44,15 @@ function Button({
       title={titleAttr}
       aria-label={ariaLabel}
       className={cn(
-        'rounded-lg font-medium transition focus:outline-none focus:ring-2',
+        'inline-flex items-center justify-center gap-2 rounded-lg font-medium transition focus:outline-none focus:ring-2',
         variants[variant],
         sizes[size],
         className
       )}
     >
+      {icon && iconPosition === 'left' ? <SvgIcon name={icon} size={iconSize} /> : null}
       {children}
+      {icon && iconPosition === 'right' ? <SvgIcon name={icon} size={iconSize} /> : null}
     </button>
   )
 }

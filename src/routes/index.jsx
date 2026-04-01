@@ -48,7 +48,7 @@ const router = createBrowserRouter([
       { path: 'projects/:id/edit', element: <EditProject />, handle: { title: 'Edit project' } },
       { path: 'projects/:id', element: <ProjectDetails />, handle: { title: 'Project' } },
       { path: 'projects', element: <ProjectList />, handle: { title: 'Projects' } },
-      { path: 'users', element: <UsersPage />, handle: { title: 'Users' } },
+      { path: 'employees', element: <UsersPage />, handle: { title: 'Employees' } },
       { path: 'assignments', element: <AssignmentsPage />, handle: { title: 'Assignments' } },
       { path: 'my-projects', element: <MyProjectsPage />, handle: { title: 'My Projects' } },
       { path: 'activity-logs', element: <ActivityLogsPage />, handle: { title: 'Activity Logs' } },

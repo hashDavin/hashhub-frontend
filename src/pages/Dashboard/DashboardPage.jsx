@@ -24,9 +24,9 @@ function DashboardPage() {
     ...(showUsers
       ? [
           {
-            title: 'Users',
+            title: 'Employees',
             description: 'Manage team accounts.',
-            href: '/users',
+            href: '/employees',
             icon: Users,
           },
         ]

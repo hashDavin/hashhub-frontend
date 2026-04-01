@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { Eye, EyeOff, Pencil, Trash2 } from 'lucide-react'
 import Button from '@/components/ui/Button'
-import Spinner from '@/components/ui/Spinner'
+import HashHubLoader from '@/components/common/HashHubLoader'
 import { CREDENTIAL_TYPE_OPTIONS } from '@/constants/project'
 
 function typeLabel(value) {
@@ -74,8 +74,7 @@ function CredentialListBody({ items, isLoading, canManage, onEdit, onDelete }) {
       <tr>
         <td colSpan={5} className="px-4 py-12 text-center">
           <div className="inline-flex flex-col items-center gap-2 text-slate-500">
-            <Spinner />
-            <span className="text-sm">Loading…</span>
+            <HashHubLoader label="Loading..." />
           </div>
         </td>
       </tr>

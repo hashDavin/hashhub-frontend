@@ -1,6 +1,6 @@
 import { memo } from 'react'
 import { cn } from '@/utils/cn'
-import Spinner from '@/components/ui/Spinner'
+import HashHubLoader from '@/components/common/HashHubLoader'
 
 function cellAlign(col) {
   return col.align === 'right' ? 'text-right' : ''
@@ -12,8 +12,7 @@ const DataTableBody = memo(function DataTableBody({ columns, rows, isLoading, em
       <tr>
         <td colSpan={columns.length} className="px-4 py-12 text-center">
           <div className="inline-flex flex-col items-center gap-2 text-slate-500">
-            <Spinner />
-            <span className="text-sm">Loading…</span>
+            <HashHubLoader label="Loading..." />
           </div>
         </td>
       </tr>

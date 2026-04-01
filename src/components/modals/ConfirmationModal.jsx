@@ -1,5 +1,5 @@
 import Button from '@/components/ui/Button'
-import Spinner from '@/components/ui/Spinner'
+import HashHubLoader from '@/components/common/HashHubLoader'
 import { cn } from '@/utils/cn'
 
 function ConfirmationModal({
@@ -16,7 +16,7 @@ function ConfirmationModal({
   if (!open) return null
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 !mt-0">
       <button
         type="button"
         aria-label="Close"
@@ -48,7 +48,7 @@ function ConfirmationModal({
             disabled={loading}
           >
             <span className="inline-flex items-center justify-center gap-2">
-              {loading ? <Spinner size="sm" className="text-white" /> : null}
+              {loading ? <HashHubLoader inline size="sm" className="text-white" /> : null}
               {loading ? `${confirmLabel}…` : confirmLabel}
             </span>
           </Button>

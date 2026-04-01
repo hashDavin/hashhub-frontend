@@ -5,8 +5,13 @@ export const PROJECT_STATUS_OPTIONS = [
 ]
 
 export const CREDENTIAL_TYPE_OPTIONS = [
-  { value: 'repo', label: 'Repository' },
-  { value: 'server', label: 'Server' },
-  { value: 'login', label: 'Login' },
-  { value: 'api', label: 'API' },
+  { value: 'github', label: 'GitHub' },
+  { value: 'repository', label: 'Repository' },
+  { value: 'vercel', label: 'Vercel' },
+  { value: 'render', label: 'Render' },
+  { value: 'live_url', label: 'Live URL' },
+  { value: 'dev_url', label: 'Dev URL' },
+  { value: 'env', label: 'Environment' },
+  { value: 'requirement_doc', label: 'Requirement Doc' },
+  { value: 'credentials', label: 'Credentials' },
 ]

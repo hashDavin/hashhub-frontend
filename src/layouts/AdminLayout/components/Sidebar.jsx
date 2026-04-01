@@ -3,13 +3,29 @@ import sidebarConfig from '@/layouts/AdminLayout/sidebarConfig'
 import SidebarSection from '@/layouts/AdminLayout/components/SidebarSection'
 
 function Sidebar({ role, collapsed, onToggleCollapse, onCloseMobile }) {
+  const visibleSections = sidebarConfig
+    .map((section) => {
+      const items = section.items
+        .filter((item) => item.roles.includes(role))
+        .map((item) => {
+          if (!item.children) return item
+          const visibleChildren = item.children.filter((child) => child.roles.includes(role))
+          return { ...item, children: visibleChildren }
+        })
+        .filter((item) => !item.children || item.children.length > 0)
+      return { ...section, items }
+    })
+    .filter((section) => section.items.length > 0)
+
   return (
-    <aside className="flex h-full w-full flex-col border-r border-white/5 bg-app-sidebar">
-      <div className="flex items-center justify-between px-3 py-4">
+    <aside className="flex h-full w-full flex-col rounded-xl bg-white p-3 shadow-card">
+      <div className="flex items-center justify-between px-3 py-3">
         {!collapsed ? (
-          <div className="px-2">
-            <p className="text-xs font-medium uppercase tracking-wider text-slate-500">Workspace</p>
-            <h1 className="text-lg font-semibold tracking-tight text-slate-100">HashHub</h1>
+          <div className="inline-flex items-center gap-3 rounded-xl bg-brand px-3 py-2 text-white">
+            <span className="inline-flex h-7 w-7 items-center justify-center rounded-md bg-white text-xs font-bold text-brand">
+              HH
+            </span>
+            <h1 className="text-sm font-semibold tracking-tight">HashHub</h1>
           </div>
         ) : (
           <span className="sr-only">HashHub</span>
@@ -17,29 +33,36 @@ function Sidebar({ role, collapsed, onToggleCollapse, onCloseMobile }) {
         <button
           type="button"
           onClick={onToggleCollapse}
-          className="hidden rounded-lg p-1.5 text-slate-300 transition hover:bg-white/10 hover:text-white lg:inline-flex"
+          className="hidden rounded-lg p-1.5 text-slate-500 transition hover:bg-slate-200 hover:text-slate-900 lg:inline-flex"
           aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
         >
           {collapsed ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
         </button>
       </div>
 
-      <nav className="flex-1 space-y-6 overflow-y-auto px-2 pb-6">
-        {sidebarConfig.map((section) => {
-          const allowedItems = section.items.filter((item) => item.roles.includes(role))
-          if (!allowedItems.length) return null
-
-          return (
-            <SidebarSection
-              key={section.title}
-              title={section.title}
-              items={allowedItems}
-              collapsed={collapsed}
-              onNavigate={onCloseMobile}
-            />
-          )
-        })}
+      <nav className="flex-1 space-y-4 overflow-y-auto px-1 pb-4 pt-2">
+        {visibleSections && visibleSections?.length > 0 &&visibleSections?.map((section) => (
+          <SidebarSection
+            key={section.title}
+            title={section.title}
+            items={section.items}
+            collapsed={collapsed}
+            onNavigate={onCloseMobile}
+          />
+        ))}
       </nav>
+
+      {/* {!collapsed ? (
+        <div className="mt-2 rounded-2xl bg-brand/10 p-2">
+          <div className="flex items-center justify-center overflow-hidden rounded-xl bg-brand/20">
+            <img
+              src={supportIllustration}
+              alt="Support"
+              className="h-24 w-24 object-cover object-top"
+            />
+          </div>
+        </div>
+      ) : null} */}
     </aside>
   )
 }

@@ -114,8 +114,8 @@ export function useProjectDetailsPage() {
   const saveCredential = async (payload) => {
     setCredSubmitting(true)
     try {
-      const body = { ...payload }
-      if (!body.password) delete body.password
+      const body = payload instanceof FormData ? payload : { ...payload }
+      if (!(body instanceof FormData) && !body.password) delete body.password
       if (credModal.mode === 'create') {
         await projectService.createCredential(id, body)
         toast.success('Credential added successfully.')

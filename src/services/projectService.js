@@ -3,7 +3,23 @@ import { unwrapData, unwrapPaginated } from '@/utils/api'
 
 export const projectService = {
   list(params = {}) {
-    return apiClient.get('/projects', { params }).then(unwrapPaginated)
+    return apiClient.get('/projects', { params }).then((res) => {
+      const payload = res.data?.data
+      if (Array.isArray(payload)) {
+        const page = Number(params.page || 1)
+        const perPage = Number(params.per_page || 15)
+        return {
+          items: payload,
+          meta: {
+            current_page: page,
+            last_page: page,
+            total: payload.length,
+            per_page: perPage,
+          },
+        }
+      }
+      return unwrapPaginated(res)
+    })
   },
 
   get(id) {
@@ -23,7 +39,23 @@ export const projectService = {
   },
 
   listMembers(projectId, params = {}) {
-    return apiClient.get(`/projects/${projectId}/users`, { params }).then(unwrapPaginated)
+    return apiClient.get(`/projects/${projectId}/users`, { params }).then((res) => {
+      const payload = res.data?.data
+      if (Array.isArray(payload)) {
+        const page = Number(params.page || 1)
+        const perPage = Number(params.per_page || 15)
+        return {
+          items: payload,
+          meta: {
+            current_page: page,
+            last_page: page,
+            total: payload.length,
+            per_page: perPage,
+          },
+        }
+      }
+      return unwrapPaginated(res)
+    })
   },
 
   assignUsers(projectId, userIds) {
@@ -35,15 +67,39 @@ export const projectService = {
   },
 
   listCredentials(projectId, params = {}) {
-    return apiClient.get(`/projects/${projectId}/details`, { params }).then(unwrapPaginated)
+    return apiClient.get(`/projects/${projectId}/details`, { params }).then((res) => {
+      const payload = res.data?.data
+      if (Array.isArray(payload)) {
+        const page = Number(params.page || 1)
+        const perPage = Number(params.per_page || 25)
+        return {
+          items: payload,
+          meta: {
+            current_page: page,
+            last_page: page,
+            total: payload.length,
+            per_page: perPage,
+          },
+        }
+      }
+      return unwrapPaginated(res)
+    })
   },
 
   createCredential(projectId, payload) {
-    return apiClient.post(`/projects/${projectId}/details`, payload).then((res) => unwrapData(res))
+    return apiClient
+      .post(`/projects/${projectId}/details`, payload, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      })
+      .then((res) => unwrapData(res))
   },
 
   updateCredential(detailId, payload) {
-    return apiClient.put(`/details/${detailId}`, payload).then((res) => unwrapData(res))
+    return apiClient
+      .post(`/details/${detailId}?_method=PUT`, payload, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      })
+      .then((res) => unwrapData(res))
   },
 
   deleteCredential(detailId) {

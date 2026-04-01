@@ -1,15 +1,23 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import PageHeader from '@/components/common/PageHeader'
 import ProjectForm from '@/components/projects/ProjectForm'
+import { useProjectPermissions } from '@/hooks/useProjectPermissions'
 import { useToast } from '@/components/notifications/ToastProvider'
 import { projectService } from '@/services/projectService'
 import { getErrorMessage } from '@/utils/errorMessage'
 
 function CreateProject() {
   const navigate = useNavigate()
+  const { canManageProjects } = useProjectPermissions()
   const toast = useToast()
   const [submitting, setSubmitting] = useState(false)
+
+  useEffect(() => {
+    if (!canManageProjects) {
+      navigate('/projects', { replace: true })
+    }
+  }, [canManageProjects, navigate])
 
   const handleSubmit = async (payload) => {
     setSubmitting(true)

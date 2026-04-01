@@ -6,12 +6,13 @@ import AssignUserModal from '@/components/projects/AssignUserModal'
 import ConfirmationModal from '@/components/modals/ConfirmationModal'
 import ModalShell from '@/components/modals/ModalShell'
 import Button from '@/components/ui/Button'
-import Spinner from '@/components/ui/Spinner'
+import HashHubLoader from '@/components/common/HashHubLoader'
 import { useProjectDetailsPage } from '@/hooks/useProjectDetailsPage'
 import { useProjectPermissions } from '@/hooks/useProjectPermissions'
+import { useState } from 'react'
 
 function ProjectDetails() {
-  const { canManageProjects } = useProjectPermissions()
+  const { canManageProjects, canAddCredentials, isSuperAdmin } = useProjectPermissions()
   const {
     id,
     navigate,
@@ -46,8 +47,7 @@ function ProjectDetails() {
   if (loading) {
     return (
       <div className="flex min-h-[40vh] flex-col items-center justify-center gap-3 text-slate-500">
-        <Spinner />
-        <p className="text-sm">Loading project…</p>
+        <HashHubLoader label="Loading project..." />
       </div>
     )
   }
@@ -66,20 +66,13 @@ function ProjectDetails() {
             <Button type="button" variant="secondary" onClick={() => navigate('/projects')}>
               Back to list
             </Button>
-            {canManageProjects ? (
+            {/* {canManageProjects ? (
               <>
-                <Button
-                  type="button"
-                  variant="secondary"
-                  onClick={() => navigate(`/projects/${id}/edit`)}
-                >
-                  Edit
-                </Button>
                 <Button type="button" variant="danger" onClick={() => setDeleteProject(true)}>
                   Delete project
                 </Button>
               </>
-            ) : null}
+            ) : null} */}
           </div>
         }
       />
@@ -124,7 +117,7 @@ function ProjectDetails() {
       <section className="space-y-3">
         <div className="flex items-center justify-between">
           <h2 className="text-lg font-semibold text-slate-900">Credentials</h2>
-          {canManageProjects ? (
+          {canAddCredentials ? (
             <Button
               type="button"
               onClick={() => setCredModal({ mode: 'create', row: null })}
@@ -137,7 +130,7 @@ function ProjectDetails() {
         <CredentialList
           items={credentials}
           isLoading={credLoading}
-          canManage={canManageProjects}
+          canManage={isSuperAdmin}
           onEdit={(row) => setCredModal({ mode: 'edit', row })}
           onDelete={(row) => setDeleteCred(row)}
         />
@@ -167,6 +160,14 @@ function ProjectDetails() {
                   title: credModal.row.title,
                   username: credModal.row.username,
                   url: credModal.row.url,
+                  repo_url: credModal.row.repo_url,
+                  live_url: credModal.row.live_url,
+                  dev_url: credModal.row.dev_url,
+                  dev_username: credModal.row.dev_username,
+                  notes: credModal.row.notes,
+                  metadata: credModal.row.metadata,
+                  requirement_doc_url: credModal.row.requirement_doc_url,
+                  env_file_url: credModal.row.env_file_url,
                 }
               : {}
           }

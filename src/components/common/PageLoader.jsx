@@ -1,10 +1,9 @@
-import Spinner from '@/components/ui/Spinner'
+import HashHubLoader from '@/components/common/HashHubLoader'
 
 function PageLoader({ label = 'Loading…' }) {
   return (
     <div className="flex min-h-[50vh] flex-col items-center justify-center gap-3 text-slate-500">
-      <Spinner />
-      <p className="text-sm">{label}</p>
+      <HashHubLoader label={label} />
     </div>
   )
 }
