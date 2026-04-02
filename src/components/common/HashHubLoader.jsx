@@ -1,4 +1,5 @@
-import { cn } from '@/utils/cn'
+import { cn } from '@/utils/cn';
+import hashhubLogo from '@/assets/images/hashhub_logo.png';
 
 function HashHubLoader({
   label = 'Loading...',
@@ -21,12 +22,7 @@ function HashHubLoader({
 
   return (
     <div className={cn('inline-flex flex-col items-center', gap, className)} role="status" aria-label={label}>
-      <span className={cn('relative inline-flex items-center justify-center rounded-full border border-brand/20 text-brand', ringSize)}>
-        <span className={cn('inline-flex items-center justify-center rounded-full bg-brand text-white font-semibold', badgeSize)}>
-          HH
-        </span>
-        <span className="absolute inset-0 animate-spin rounded-full border-current border-t-transparent text-brand/70" />
-      </span>
+      <img src={hashhubLogo} alt="HashHub" className="h-10 w-auto" />
       {label ? <span className={cn('text-sm text-slate-500', textClassName)}>{label}</span> : null}
     </div>
   )

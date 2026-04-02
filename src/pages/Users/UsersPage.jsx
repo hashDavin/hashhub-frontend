@@ -12,7 +12,7 @@ import { userService } from '@/services/userService'
 import { getErrorMessage } from '@/utils/errorMessage'
 import EmployeeFormModal from '@/components/users/EmployeeFormModal'
 import EntityListCard from '@/components/common/EntityListCard'
-
+import SvgIcon from '@/components/ui/SvgIcon'
 function formatDate(value) {
   if (!value) return '-'
   const date = new Date(value)
@@ -47,6 +47,14 @@ function UsersPage() {
   const [editEmployee, setEditEmployee] = useState(null)
   const [deleteEmployee, setDeleteEmployee] = useState(null)
   const [deleteLoading, setDeleteLoading] = useState(false)
+
+  const getAvatarFile = (avatarValue) => {
+    if (!avatarValue) return null
+    if (avatarValue instanceof File) return avatarValue
+    if (avatarValue instanceof FileList) return avatarValue[0] || null
+    if (Array.isArray(avatarValue)) return avatarValue[0] || null
+    return null
+  }
 
   const loadEmployees = useCallback(
     async (page = 1) => {
@@ -87,52 +95,54 @@ function UsersPage() {
     return () => window.clearTimeout(timer)
   }, [search])
 
-  const handleCreateEmployee = async (e) => {
-    e.preventDefault()
+  const handleCreateEmployee = async (values) => {
     setError('')
-    const fd = new FormData(e.target)
     const payload = new FormData()
-    payload.append('name', String(fd.get('name') || ''))
-    payload.append('email', String(fd.get('email') || ''))
-    payload.append('password', String(fd.get('password') || ''))
-    if (fd.get('avatar') instanceof File && fd.get('avatar')?.size > 0) {
-      payload.append('avatar', fd.get('avatar'))
+    payload.append('name', String(values.name || '').trim())
+    payload.append('email', String(values.email || '').trim())
+    payload.append('password', String(values.password || '').trim())
+    const avatarFile = getAvatarFile(values.avatar)
+    if (avatarFile && avatarFile.size > 0) {
+      payload.append('avatar', avatarFile)
     }
     setSaving(true)
     try {
       await userService.createEmployee(payload)
-      toast.success('Employee added successfully.')
+      toast.success('Team member added successfully.')
       setOpenCreate(false)
       await loadEmployees(1)
     } catch (err) {
-      setError(getErrorMessage(err, 'Failed to create employee.'))
+      setError(getErrorMessage(err, 'Failed to create team member.'))
     } finally {
       setSaving(false)
     }
   }
 
-  const handleEditEmployee = async (e) => {
-    e.preventDefault()
+  const handleEditEmployee = async (values) => {
     if (!editEmployee) return
     setError('')
-    const fd = new FormData(e.target)
     const payload = new FormData()
-    payload.append('name', String(fd.get('name') || ''))
-    payload.append('email', String(fd.get('email') || ''))
-    const password = String(fd.get('password') || '').trim()
+    payload.append('name', String(values.name || '').trim())
+    const nextEmail = String(values.email || '').trim()
+    const currentEmail = String(editEmployee.email || '').trim()
+    if (nextEmail && nextEmail.toLowerCase() !== currentEmail.toLowerCase()) {
+      payload.append('email', nextEmail)
+    }
+    const password = String(values.password || '').trim()
     if (password) payload.append('password', password)
-    payload.append('remove_avatar', fd.get('remove_avatar') ? '1' : '0')
-    if (fd.get('avatar') instanceof File && fd.get('avatar')?.size > 0) {
-      payload.append('avatar', fd.get('avatar'))
+    payload.append('remove_avatar', values.remove_avatar ? '1' : '0')
+    const avatarFile = getAvatarFile(values.avatar)
+    if (avatarFile && avatarFile.size > 0) {
+      payload.append('avatar', avatarFile)
     }
     setSaving(true)
     try {
       await userService.updateEmployee(editEmployee.id, payload)
-      toast.success('Employee updated successfully.')
+      toast.success('Team member updated successfully.')
       setEditEmployee(null)
       await loadEmployees(meta.current_page)
     } catch (err) {
-      setError(getErrorMessage(err, 'Failed to update employee.'))
+      setError(getErrorMessage(err, 'Failed to update team member.'))
     } finally {
       setSaving(false)
     }
@@ -143,12 +153,12 @@ function UsersPage() {
     setDeleteLoading(true)
     try {
       await userService.deleteEmployee(deleteEmployee.id)
-      toast.success('Employee deleted successfully.')
+      toast.success('Team member deleted successfully.')
       setDeleteEmployee(null)
       const page = employees.length === 1 && meta.current_page > 1 ? meta.current_page - 1 : meta.current_page
       await loadEmployees(page)
     } catch (err) {
-      toast.error(getErrorMessage(err, 'Failed to delete employee.'))
+      toast.error(getErrorMessage(err, 'Failed to delete team member.'))
     } finally {
       setDeleteLoading(false)
     }
@@ -169,7 +179,7 @@ function UsersPage() {
             : row
         )
       )
-      toast.success(response?.data?.message || 'Employee status updated.')
+      toast.success(response?.data?.message || 'Team member status updated.')
     } catch (err) {
       toast.error(getErrorMessage(err, 'Failed to update status.'))
     }
@@ -185,20 +195,21 @@ function UsersPage() {
   return (
     <div className="space-y-6">
       <PageHeader
-        title={`Employees (${meta.total})`}
+        title={`Team (${meta.total})`}
         action={
-          <Button type="button" onClick={() => setOpenCreate(true)} icon="arrowRight">
-            Add Employee
+          <Button type="button" variant="primary" onClick={() => setOpenCreate(true)} iconPosition="left">
+            <SvgIcon name="plus" className="h-4 w-4" />
+            Create
           </Button>
         }
       />
 
       <EntityListCard
-        headers={['Employees', 'Projects', 'Joined', 'Status',]}
+        headers={['Team', 'Projects', 'Joined', 'Status',]}
         headerGridClass="grid-cols-[2.4fr_1fr_1fr_1fr_1fr_44px]"
         isLoading={loading}
         isEmpty={employees.length === 0}
-        emptyText="No Employees found."
+        emptyText="No team members found."
         rangeLabel={rangeLabel}
         canPrev={meta.current_page > 1 && !loading}
         canNext={meta.current_page < meta.last_page && !loading}
@@ -211,7 +222,7 @@ function UsersPage() {
           >
             <div className="flex items-center gap-3">
               {employee.avatar_url ? (
-                <img src={employee.avatar_url} alt={employee.name} className="h-11 w-11 rounded-full object-cover" />
+                <img src={`${import.meta.env.VITE_IMAGE_BASE_URL}${employee.avatar_url}`} alt={employee.name} className="h-11 w-11 rounded-full object-cover" />
               ) : (
                 <div className="inline-flex h-11 w-11 items-center justify-center rounded-full bg-brand-soft text-sm font-semibold text-brand">
                   {getInitials(employee.name)}
@@ -231,9 +242,9 @@ function UsersPage() {
                 onChange={() => handleToggleStatus(employee)}
                 label={`Toggle status for ${employee.name}`}
               />
-              <span className={`text-xs font-medium ${employee.is_active ? 'text-emerald-700' : 'text-slate-500'}`}>
+              {/* <span className={`text-xs font-medium ${employee.is_active ? 'text-emerald-700' : 'text-slate-500'}`}>
                 {employee.is_active ? 'Active' : 'Inactive'}
-              </span>
+              </span> */}
             </div>
             <div className="relative">
               <button
@@ -286,7 +297,7 @@ function UsersPage() {
             <div className="relative">
               <input
                 type="text"
-                placeholder="Search employee"
+                placeholder="Search team member"
                 className="h-10 rounded-lg border border-app-border bg-white px-3 pr-9 text-sm outline-none focus:border-brand"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
@@ -302,15 +313,15 @@ function UsersPage() {
                 </button>
               ) : null}
             </div>
-            <button
+            {/* <button
               type="button"
               onClick={() => setShowFilters((prev) => !prev)}
               className="inline-flex h-10 w-10 items-center justify-center rounded-lg border border-app-border bg-white text-slate-600 hover:text-slate-900"
               aria-label="Toggle filters"
             >
               <Funnel className="h-4 w-4" />
-            </button>
-            {showFilters ? (
+            </button> */}
+            {/* {showFilters ? (
               <div className="absolute right-0 top-12 z-20 w-56 space-y-3 rounded-lg border border-app-border bg-white p-3 shadow-elevated">
                 <label className="block space-y-1 text-xs text-slate-600">
                   <span>Sort by joined</span>
@@ -336,7 +347,7 @@ function UsersPage() {
                   </select>
                 </label>
               </div>
-            ) : null}
+            ) : null} */}
           </div>
         </div>
       </EntityListCard>
@@ -350,7 +361,7 @@ function UsersPage() {
         onSubmit={handleCreateEmployee}
       />
 
-      <ModalShell open={!!viewEmployee} onClose={() => setViewEmployee(null)} title="Employee details">
+      <ModalShell open={!!viewEmployee} onClose={() => setViewEmployee(null)} title="Team member details">
         {viewEmployee ? (
           <div className="space-y-2 text-sm">
             <p><span className="text-slate-500">Name:</span> {viewEmployee.name}</p>
@@ -374,7 +385,7 @@ function UsersPage() {
 
       <ConfirmationModal
         open={!!deleteEmployee}
-        title="Delete Employee"
+        title="Delete Team Member"
         message={deleteEmployee ? `Delete ${deleteEmployee.name}? This action cannot be undone.` : ''}
         onConfirm={handleDeleteEmployee}
         onCancel={() => (deleteLoading ? null : setDeleteEmployee(null))}

@@ -44,7 +44,7 @@ function SidebarItem({ item, collapsed, onNavigate }) {
           onClick={() => setExpanded((prev) => !prev)}
           className={cn(
             'flex w-full items-center rounded-xl px-3 py-2.5 text-sm transition',
-            isActive ? 'bg-brand-soft text-brand' : 'text-slate-500 hover:bg-slate-100 hover:text-slate-800'
+            isActive ? 'bg-[#3BC2DB] text-white' : 'text-slate-500 hover:bg-[#3BC2DB] hover:text-white'
           )}
         >
           <Icon className="h-4 w-4 shrink-0" />
@@ -71,7 +71,7 @@ function SidebarItem({ item, collapsed, onNavigate }) {
                   className={cn(
                     'flex items-center rounded-xl px-3 py-2 text-sm transition',
                     childActive
-                      ? 'bg-brand text-white'
+                      ? 'bg-[#3BC2DB] text-white'
                       : 'text-slate-500 hover:bg-slate-100 hover:text-slate-800'
                   )}
                 >

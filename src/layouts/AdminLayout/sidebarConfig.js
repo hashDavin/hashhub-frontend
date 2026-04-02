@@ -4,9 +4,7 @@ import {
   FolderKanban,
   LayoutDashboard,
   ListChecks,
-  LogOut,
   Settings,
-  User,
   Users,
   UserSquare2,
 } from 'lucide-react'
@@ -18,43 +16,18 @@ const superAdminOnly = [ROLES.SUPER_ADMIN]
 
 const sidebarConfig = [
   {
-    title: 'Dashboard',
     items: [{ label: 'Dashboard', path: '/dashboard', icon: LayoutDashboard, roles: allRoles }],
   },
   {
-    title: 'Management',
-    items: [
-      {
-        label: 'Management',
-        icon: BriefcaseBusiness,
-        roles: allRoles,
-        children: [
-          { label: 'Employees', path: '/employees', icon: Users, roles: adminOnly },
-          { label: 'Projects', path: '/projects', icon: FolderKanban, roles: allRoles },
-          { label: 'Assignments', path: '/assignments', icon: ListChecks, roles: superAdminOnly },
-        ],
-      },
-    ],
+    items: [   { label: 'Team Management', path: '/employees', icon: Users, roles: adminOnly },],
   },
-  // {
-  //   title: 'Projects',
-  //   items: [
-  //     { label: 'All Projects', path: '/projects', icon: FolderKanban, roles: allRoles },
-  //     { label: 'My Projects', path: '/my-projects', icon: UserSquare2, roles: allRoles },
-  //   ],
-  // },
   {
-    title: 'System',
+    items: [ { label: 'Project Management', path: '/projects', icon: FolderKanban, roles: allRoles },],
+  },
+
+  {
     items: [
-      { label: 'Activity Logs', path: '/activity-logs', icon: Activity, roles: adminOnly },
       { label: 'Settings', path: '/settings', icon: Settings, roles: superAdminOnly },
-    ],
-  },
-  {
-    title: 'Account',
-    items: [
-      { label: 'Profile', path: '/profile', icon: User, roles: allRoles },
-      { label: 'Logout', path: '/login', icon: LogOut, roles: allRoles, action: 'logout' },
     ],
   },
 ]

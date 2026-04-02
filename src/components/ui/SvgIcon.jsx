@@ -22,6 +22,13 @@ function SvgIcon({ name, size = 18, className = '' }) {
         </svg>
       )
 
+    case 'plus':
+      return (
+        <svg {...commonProps}>
+          <path d="M12 4v16m8-8H4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+        </svg>
+      )
+
     case 'eye':
       return (
         <svg {...commonProps}>

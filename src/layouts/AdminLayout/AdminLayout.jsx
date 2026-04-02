@@ -18,7 +18,7 @@ function AdminLayout() {
   }, [matches])
 
   return (
-    <div className="min-h-screen bg-app-bg">
+    <div className="min-h-screen bg-white">
       {mobileSidebarOpen ? (
         <button
           type="button"
@@ -29,7 +29,7 @@ function AdminLayout() {
       ) : null}
 
       <div
-        className={`fixed inset-y-0 left-0 p-4 z-40 w-64 transition-transform lg:translate-x-0 ${
+        className={`fixed inset-y-0 left-0 z-40 w-64 transition-transform lg:translate-x-0 ${
           mobileSidebarOpen ? 'translate-x-0' : '-translate-x-full'
         } ${collapsed ? 'lg:w-20' : 'lg:w-64'}`}
       >
@@ -42,8 +42,8 @@ function AdminLayout() {
       </div>
 
       <div className={`${collapsed ? 'lg:pl-20' : 'lg:pl-64'}`}>
-        {/* <Header title={title} onToggleMobileSidebar={() => setMobileSidebarOpen(true)} /> */}
-        <main className="w-full p-4 lg:p-6">
+        <Header title={title} onToggleMobileSidebar={() => setMobileSidebarOpen(true)} />
+        <main className="w-full p-4 lg:p-6 bg-white">
           <Suspense fallback={<PageLoader label="Loading page…" />}>
             <Outlet />
           </Suspense>

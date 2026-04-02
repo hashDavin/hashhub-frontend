@@ -3,7 +3,7 @@ import SvgIcon from '@/components/ui/SvgIcon'
 
 const variants = {
   primary:
-    'bg-brand text-white hover:bg-brand-hover focus:ring-brand-soft disabled:pointer-events-none disabled:opacity-50',
+    'bg-[#3BC2DB] text-white hover:bg-white hover:text-[#3BC2DB] hover:border-[#3BC2DB] hover:border focus:ring-brand-soft disabled:pointer-events-none disabled:opacity-50',
   secondary:
     'border border-app-border bg-white text-slate-700 hover:bg-slate-50 focus:ring-brand-soft disabled:pointer-events-none disabled:opacity-50',
   danger:
@@ -17,6 +17,7 @@ const variants = {
 const sizes = {
   md: 'h-10 px-4 text-sm',
   sm: 'h-8 px-3 text-xs',
+  lg: 'h-12 px-5 text-base',
   icon: 'h-9 w-9 p-0 inline-flex items-center justify-center',
 }
 

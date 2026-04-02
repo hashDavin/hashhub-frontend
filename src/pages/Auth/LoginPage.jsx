@@ -1,22 +1,41 @@
 import { useEffect, useState } from 'react'
+import { yupResolver } from '@hookform/resolvers/yup'
+import { useForm } from 'react-hook-form'
 import { useDispatch } from 'react-redux'
 import { useNavigate } from 'react-router-dom'
 import { setAuth } from '@/store/authSlice'
 import { useAuth } from '@/hooks/useAuth'
 import { authService } from '@/services/authService'
 import { getErrorMessage } from '@/utils/errorMessage'
+import { useToast } from '@/components/notifications/ToastProvider'
 import Button from '@/components/ui/Button'
 import SvgIcon from '@/components/ui/SvgIcon'
 import TextInput from '@/components/forms/TextInput'
-import illustration from '@/assets/images/Illustration.png'
+import hashhubLogo from '@/assets/images/hashhub_logo.png'
+import loginBg from '@/assets/images/login-bg.png'
+import { loginSchema } from '@/validations/authSchemas'
 
 function LoginPage() {
   const dispatch = useDispatch()
   const navigate = useNavigate()
   const { isAuthenticated } = useAuth()
-  const [error, setError] = useState('')
-  const [loading, setLoading] = useState(false)
+  const toast = useToast()
+
+  const [submitError, setSubmitError] = useState('')
   const [showPassword, setShowPassword] = useState(false)
+  const {
+    register,
+    handleSubmit,
+    formState: { errors, isSubmitting },
+  } = useForm({
+    resolver: yupResolver(loginSchema),
+    mode: 'onSubmit',
+    reValidateMode: 'onChange',
+    defaultValues: {
+      email: '',
+      password: '',
+    },
+  })
 
   useEffect(() => {
     if (isAuthenticated) {
@@ -24,94 +43,138 @@ function LoginPage() {
     }
   }, [isAuthenticated, navigate])
 
-  const handleSubmit = async (e) => {
-    e.preventDefault()
-    setError('')
-    const fd = new FormData(e.target)
-    setLoading(true)
+  const onSubmit = async ({ email, password }) => {
+    setSubmitError('')
     try {
       const data = await authService.login({
-        email: fd.get('email'),
-        password: fd.get('password'),
+        email,
+        password,
         device_name: 'web',
       })
+      const isInactive = data?.user?.is_active === false || Number(data?.user?.is_active) === 0
+      if (isInactive) {
+        const inactiveMessage =
+          'Your account is currently inactive. Please contact your administrator for assistance.'
+        setSubmitError(inactiveMessage)
+        toast.error(inactiveMessage)
+        return
+      }
+
       dispatch(setAuth({ token: data.token, user: data.user }))
       navigate('/dashboard', { replace: true })
     } catch (err) {
-      setError(getErrorMessage(err, 'Login failed.'))
-    } finally {
-      setLoading(false)
+      const message = getErrorMessage(err, 'Login failed.')
+      setSubmitError(message);
+      toast.error(message);
     }
   }
 
   return (
-    <section className="mx-auto flex min-h-[calc(100vh-3rem)] w-full max-w-6xl items-center justify-center">
-      <div className="grid w-full overflow-hidden rounded-2xl border border-app-border bg-white shadow-card lg:grid-cols-2">
-        <aside className="flex flex-col justify-between bg-brand p-8 text-white">
-          <div>
-            <div className="inline-flex items-center gap-3 rounded-lg bg-white/15 px-3 py-2">
-              <span className="inline-flex h-8 w-8 items-center justify-center rounded-md bg-white text-sm font-bold text-brand">
-                HH
-              </span>
-              <span className="text-lg font-semibold">HashHub</span>
-            </div>
-            <h2 className="mt-8 text-4xl font-semibold leading-tight">
-              Your place to work
-              <br />
-              Plan. Create. Control.
-            </h2>
-          </div>
-          <img src={illustration} alt="Project management illustration" className="mt-8 max-w-md self-center" />
-        </aside>
+    <section
+      className="relative min-h-screen w-full bg-cover bg-center"
+      style={{ backgroundImage: `url(${loginBg})` }}
+    >
+      {/* Dark Overlay */}
+      <div className="absolute inset-0 bg-gradient-to-br from-black/60 via-black/50 to-black/70" />
 
-        <div className="flex items-center justify-center p-8 sm:p-10">
-          <div className="w-full max-w-md">
-            <h3 className="text-center text-2xl font-semibold text-slate-900">Sign In to HashHub</h3>
-            <form onSubmit={handleSubmit} className="mt-8 space-y-4">
+      {/* Content */}
+      <div className="relative z-10 flex min-h-screen items-center justify-center px-4">
+        <div className="w-full max-w-md rounded-2xl bg-white backdrop-blur-xl shadow-2xl border border-white/20">
+
+          {/* Header */}
+          <div className="flex flex-col items-center gap-3 px-8 pt-8 pb-6">
+            <div className="h-16 w-48 overflow-hidden">
+              <img src={hashhubLogo} alt="HashHub" className="h-full" />
+            </div>
+            <p className="text-sm text-gray-500">
+            Sign in to manage your workspace
+            </p>
+          </div>
+
+          {/* Form */}
+          <div className="px-8 pb-8">
+            <form onSubmit={handleSubmit(onSubmit)} className="space-y-5" noValidate>
+
               <TextInput
                 id="email"
                 name="email"
                 type="email"
-                label="Email Address"
-                placeholder="yourmail@gmail.com"
+                label="Email"
+                placeholder="you@example.com"
+                autoComplete="email"
+                error={errors.email?.message}
+                {...register('email')}
               />
-              <label htmlFor="password" className="block space-y-2">
-                <span className="text-sm font-medium text-slate-700">Password</span>
+
+              {/* Password */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Password
+                </label>
+
                 <div className="relative">
                   <input
                     id="password"
-                    name="password"
-                    type={showPassword ? 'text' : 'password'}
+                    type={showPassword ? "text" : "password"}
                     placeholder="••••••••"
-                    className="h-10 w-full rounded-lg border border-app-border px-3 pr-11 text-sm outline-none transition focus:border-brand focus:ring-2 focus:ring-brand-soft"
+                    autoComplete="current-password"
+                    className={`w-full h-11 rounded-xl border px-4 pr-12 text-sm outline-none transition ${
+                      errors.password
+                        ? "border-red-300 focus:ring-2 focus:ring-red-100 focus:border-red-500"
+                        : "border-gray-300 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                    }`}
+                    {...register('password')}
                   />
+
                   <button
                     type="button"
                     onClick={() => setShowPassword((prev) => !prev)}
-                    className="absolute inset-y-0 right-0 inline-flex w-10 items-center justify-center text-slate-500 hover:text-slate-700"
-                    aria-label={showPassword ? 'Hide password' : 'Show password'}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
                   >
-                    <SvgIcon name={showPassword ? 'eyeOff' : 'eye'} size={18} />
+                    <SvgIcon name={showPassword ? "eyeOff" : "eye"} size={18} />
                   </button>
                 </div>
-              </label>
+                {errors.password ? (
+                  <p className="mt-2 text-xs text-red-600">{errors.password.message}</p>
+                ) : null}
+              </div>
 
+              {/* Options */}
               <div className="flex items-center justify-between text-sm">
-                <label className="inline-flex items-center gap-2 text-slate-600">
-                  <input type="checkbox" name="remember" className="h-4 w-4 rounded border-app-border" />
+                <label className="flex items-center gap-2 text-gray-600">
+                  <input
+                    type="checkbox"
+                    name="remember"
+                    className="h-4 w-4 rounded border-gray-300"
+                  />
                   Remember me
                 </label>
-                <button type="button" className="text-brand hover:text-brand-hover">
-                  Forgot Password?
+
+                <button
+                  type="button"
+                  className="text-[#3BC2DB] font-medium"
+                >
+                  Forgot password?
                 </button>
               </div>
 
-              {error ? <p className="text-sm text-red-600">{error}</p> : null}
-              <div className="flex justify-center">
-                <Button type="submit" disabled={loading} icon="arrowRight" className="mx-auto flex min-w-36">
-                  {loading ? 'Signing in…' : 'Sign In'}
-                </Button>
-              </div>
+              {/* Error */}
+              {/* {submitError && (
+                <div className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-600 border border-red-200">
+                  {submitError}
+                </div>
+              )} */}
+
+              {/* Button */}
+              <Button
+                type="submit"
+                disabled={isSubmitting}
+                size="md"
+                className="w-full"
+               variant="primary"
+              >
+                {isSubmitting ? "Signing in..." : "Sign In"}
+              </Button>
 
             </form>
           </div>
