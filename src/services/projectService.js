@@ -94,15 +94,15 @@ export const projectService = {
       .then((res) => unwrapData(res))
   },
 
-  updateCredential(detailId, payload) {
+  updateCredential(projectId, detailId, payload) {
     return apiClient
-      .post(`/details/${detailId}?_method=PUT`, payload, {
+      .post(`/projects/${projectId}/details/${detailId}?_method=PUT`, payload, {
         headers: { 'Content-Type': 'multipart/form-data' },
       })
       .then((res) => unwrapData(res))
   },
 
-  deleteCredential(detailId) {
-    return apiClient.delete(`/details/${detailId}`)
+  deleteCredential(projectId, detailId) {
+    return apiClient.delete(`/projects/${projectId}/details/${detailId}`)
   },
 }

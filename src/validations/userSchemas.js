@@ -32,7 +32,9 @@ export const editEmployeeSchema = yup.object({
   password: yup
     .string()
     .transform((value) => (typeof value === 'string' ? value.trim() : value))
-    .test('min-if-filled', 'Password must be at least 8 characters long.', (value) => !value || value.length >= 8),
-  remove_avatar: yup.boolean().default(false),
+    .test(
+      'min-if-filled',
+      'Password must be at least 8 characters long.',
+      (value) => !value || value.length >= 8
+    ),
 })
-

@@ -10,7 +10,7 @@ import {
 } from 'lucide-react'
 import { ROLES } from '@/constants/roles'
 
-const allRoles = [ROLES.SUPER_ADMIN, ROLES.ADMIN, ROLES.TEAM_MEMBER]
+const allRoles = [ROLES.SUPER_ADMIN, ROLES.ADMIN, ROLES.USER]
 const adminOnly = [ROLES.SUPER_ADMIN, ROLES.ADMIN]
 const superAdminOnly = [ROLES.SUPER_ADMIN]
 

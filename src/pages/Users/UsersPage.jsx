@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import { Eye, MoreVertical, Pencil, Trash2 } from 'lucide-react'
+import { Pencil, Trash2 } from 'lucide-react'
 import { useAuth } from '@/hooks/useAuth'
 import { ROLES } from '@/constants/roles'
 import PageHeader from '@/components/common/PageHeader'
@@ -8,10 +8,16 @@ import ConfirmationModal from '@/components/modals/ConfirmationModal'
 import Button from '@/components/ui/Button'
 import StatusSwitch from '@/components/ui/StatusSwitch'
 import { useToast } from '@/components/notifications/ToastProvider'
-import { userService } from '@/services/userService'
 import { getErrorMessage } from '@/utils/errorMessage'
 import EmployeeFormModal from '@/components/users/EmployeeFormModal'
-import EntityListCard from '@/components/common/EntityListCard'
+import DataTable from '@/components/tables/DataTable'
+import {
+  useGetUsersQuery,
+  useToggleUserStatusMutation,
+  useCreateUserMutation,
+  useUpdateUserMutation,
+  useDeleteUserMutation,
+} from '@/store/hashHubApi'
 
 function formatDate(value) {
   if (!value) return '-'
@@ -27,65 +33,50 @@ function getInitials(name = '') {
   return `${first}${second}`.toUpperCase() || 'NA'
 }
 
+function avatarSrc(avatarUrl) {
+  if (!avatarUrl) return null
+  if (avatarUrl.startsWith('http://') || avatarUrl.startsWith('https://')) return avatarUrl
+  const base = import.meta.env.VITE_IMAGE_BASE_URL?.replace(/\/$/, '') || ''
+  return `${base}${avatarUrl.startsWith('/') ? '' : '/'}${avatarUrl}`
+}
+
 function UsersPage() {
   const toast = useToast()
   const { user } = useAuth()
   const canToggleStatus = user?.role === ROLES.SUPER_ADMIN
-  const [employees, setEmployees] = useState([])
-  const [meta, setMeta] = useState({ current_page: 1, last_page: 1, total: 0, per_page: 10 })
-  const [loading, setLoading] = useState(true)
+  const [page, setPage] = useState(1)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
   const [search, setSearch] = useState('')
   const [debouncedSearch, setDebouncedSearch] = useState('')
   const [sort, setSort] = useState('newest')
   const [avatarFilter, setAvatarFilter] = useState('all')
-  const [openMenuId, setOpenMenuId] = useState(null)
   const [openCreate, setOpenCreate] = useState(false)
   const [viewEmployee, setViewEmployee] = useState(null)
   const [editEmployee, setEditEmployee] = useState(null)
   const [deleteEmployee, setDeleteEmployee] = useState(null)
   const [deleteLoading, setDeleteLoading] = useState(false)
 
-  const getAvatarFile = (avatarValue) => {
-    if (!avatarValue) return null
-    if (avatarValue instanceof File) return avatarValue
-    if (avatarValue instanceof FileList) return avatarValue[0] || null
-    if (Array.isArray(avatarValue)) return avatarValue[0] || null
-    return null
-  }
+  const hasAvatarParam = { all: undefined, with: 'with', without: 'without' }[avatarFilter]
 
-  const loadEmployees = useCallback(
-    async (page = 1) => {
-      setLoading(true)
-      try {
-        const { items, meta: pagination } = await userService.listEmployees({
-          page,
-          per_page: 10,
-          search: debouncedSearch.trim() || undefined,
-          sort,
-          has_avatar: avatarFilter === 'all' ? undefined : avatarFilter === 'with',
-        })
-        setEmployees(items)
-        setMeta({
-          current_page: pagination.current_page,
-          last_page: pagination.last_page,
-          total: pagination.total,
-          per_page: pagination.per_page ?? 10,
-        })
-      } catch (err) {
-        setEmployees([])
-        toast.error(getErrorMessage(err, 'Failed to load employees.'))
-      } finally {
-        setLoading(false)
-      }
-    },
-    [avatarFilter, debouncedSearch, sort, toast]
-  )
+  const {
+    data: listData,
+    isLoading,
+    isFetching,
+    isError,
+    error: listError,
+  } = useGetUsersQuery({
+    page,
+    per_page: 10,
+    search: debouncedSearch.trim() || undefined,
+    sort,
+    has_avatar: hasAvatarParam,
+  })
 
-  useEffect(() => {
-    loadEmployees(1)
-  }, [loadEmployees])
+  const [toggleUserStatus] = useToggleUserStatusMutation()
+  const [createUser] = useCreateUserMutation()
+  const [updateUser] = useUpdateUserMutation()
+  const [deleteUser] = useDeleteUserMutation()
 
   useEffect(() => {
     const timer = window.setTimeout(() => {
@@ -94,22 +85,38 @@ function UsersPage() {
     return () => window.clearTimeout(timer)
   }, [search])
 
+  useEffect(() => {
+    setPage(1)
+  }, [debouncedSearch, sort, avatarFilter])
+
+  useEffect(() => {
+    if (isError && listError) {
+      toast.error(getErrorMessage(listError, 'Failed to load employees.'))
+    }
+  }, [isError, listError, toast])
+
+  const employees = listData?.items ?? []
+  const meta = listData?.meta ?? {
+    current_page: 1,
+    last_page: 1,
+    total: 0,
+    per_page: 10,
+  }
+
+  const loading = isLoading || isFetching
+
   const handleCreateEmployee = async (values) => {
     setError('')
     const payload = new FormData()
     payload.append('name', String(values.name || '').trim())
     payload.append('email', String(values.email || '').trim())
     payload.append('password', String(values.password || '').trim())
-    const avatarFile = getAvatarFile(values.avatar)
-    if (avatarFile && avatarFile.size > 0) {
-      payload.append('avatar', avatarFile)
-    }
     setSaving(true)
     try {
-      await userService.createEmployee(payload)
+      await createUser(payload).unwrap()
       toast.success('Team member added successfully.')
       setOpenCreate(false)
-      await loadEmployees(1)
+      setPage(1)
     } catch (err) {
       setError(getErrorMessage(err, 'Failed to create team member.'))
     } finally {
@@ -129,17 +136,11 @@ function UsersPage() {
     }
     const password = String(values.password || '').trim()
     if (password) payload.append('password', password)
-    payload.append('remove_avatar', values.remove_avatar ? '1' : '0')
-    const avatarFile = getAvatarFile(values.avatar)
-    if (avatarFile && avatarFile.size > 0) {
-      payload.append('avatar', avatarFile)
-    }
     setSaving(true)
     try {
-      await userService.updateEmployee(editEmployee.id, payload)
+      await updateUser({ id: editEmployee.id, body: payload }).unwrap()
       toast.success('Team member updated successfully.')
       setEditEmployee(null)
-      await loadEmployees(meta.current_page)
     } catch (err) {
       setError(getErrorMessage(err, 'Failed to update team member.'))
     } finally {
@@ -151,12 +152,12 @@ function UsersPage() {
     if (!deleteEmployee) return
     setDeleteLoading(true)
     try {
-      await userService.deleteEmployee(deleteEmployee.id)
+      await deleteUser(deleteEmployee.id).unwrap()
       toast.success('Team member deleted successfully.')
       setDeleteEmployee(null)
-      const page =
-        employees.length === 1 && meta.current_page > 1 ? meta.current_page - 1 : meta.current_page
-      await loadEmployees(page)
+      if (employees.length === 1 && page > 1) {
+        setPage(page - 1)
+      }
     } catch (err) {
       toast.error(getErrorMessage(err, 'Failed to delete team member.'))
     } finally {
@@ -164,26 +165,18 @@ function UsersPage() {
     }
   }
 
-  const handleToggleStatus = async (employee) => {
-    if (!canToggleStatus) return
-    try {
-      const response = await userService.toggleEmployeeStatus(employee.id)
-
-      setEmployees((prev) =>
-        prev.map((row) =>
-          row.id === employee.id
-            ? {
-                ...row,
-                is_active: !row.is_active,
-              }
-            : row
-        )
-      )
-      toast.success(response?.data?.message || 'Team member status updated.')
-    } catch (err) {
-      toast.error(getErrorMessage(err, 'Failed to update status.'))
-    }
-  }
+  const handleToggleStatus = useCallback(
+    async (employee) => {
+      if (!canToggleStatus) return
+      try {
+        const res = await toggleUserStatus(employee.id).unwrap()
+        toast.success(res?.message || 'Team member status updated.')
+      } catch (err) {
+        toast.error(getErrorMessage(err, 'Failed to update status.'))
+      }
+    },
+    [canToggleStatus, toggleUserStatus, toast]
+  )
 
   const rangeLabel = useMemo(() => {
     if (meta.total === 0) return '0-0 of 0'
@@ -203,6 +196,96 @@ function UsersPage() {
     setSort('newest')
     setAvatarFilter('all')
   }
+
+  const teamColumns = useMemo(
+    () => [
+      {
+        key: 'name',
+        header: 'Name',
+        className: 'min-w-[220px]',
+        render: (employee) => {
+          const src = avatarSrc(employee.avatar_url)
+          return (
+            <div className="flex items-center gap-3">
+              {src ? (
+                <img
+                  src={src}
+                  alt={employee.name}
+                  className="h-10 w-10 shrink-0 rounded-full object-cover"
+                />
+              ) : (
+                <div className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-brand-soft text-xs font-semibold text-brand">
+                  {getInitials(employee.name)}
+                </div>
+              )}
+              <p className="truncate font-semibold text-slate-900">{employee.name}</p>
+            </div>
+          )
+        },
+      },
+      {
+        key: 'email',
+        header: 'Email',
+        className: 'min-w-[220px]',
+        render: (row) => <span className="truncate text-slate-700">{row.email}</span>,
+      },
+      {
+        key: 'projects_count',
+        header: 'Projects Assigned',
+        className: 'w-24',
+        render: (row) => (
+          <span className="tabular-nums text-slate-700">{row.projects_count ?? 0}</span>
+        ),
+      },
+      {
+        key: 'created_at',
+        header: 'Created At',
+        className: 'w-32',
+        render: (row) => <span className="text-slate-700">{formatDate(row.created_at)}</span>,
+      },
+      {
+        key: 'status',
+        header: 'Status',
+        className: 'w-36',
+        render: (employee) => (
+          <StatusSwitch
+            checked={Boolean(employee.is_active)}
+            disabled={!canToggleStatus}
+            onChange={() => handleToggleStatus(employee)}
+            label={`Toggle status for ${employee.name}`}
+          />
+        ),
+      },
+      {
+        key: 'actions',
+        header: '',
+        align: 'right',
+        className: 'w-40',
+        thClassName: 'w-40',
+        render: (employee) => (
+          <div className="flex justify-end gap-1">
+            <button
+              type="button"
+              onClick={() => setEditEmployee(employee)}
+              className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-slate-500 hover:bg-slate-100 hover:text-brand"
+              aria-label={`Edit ${employee.name}`}
+            >
+              <Pencil className="h-4 w-4" />
+            </button>
+            <button
+              type="button"
+              onClick={() => setDeleteEmployee(employee)}
+              className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-red-600 hover:bg-red-50"
+              aria-label={`Delete ${employee.name}`}
+            >
+              <Trash2 className="h-4 w-4" />
+            </button>
+          </div>
+        ),
+      },
+    ],
+    [canToggleStatus, handleToggleStatus]
+  )
 
   return (
     <div className="space-y-6">
@@ -253,97 +336,19 @@ function UsersPage() {
         }
       />
 
-      <EntityListCard
-        headers={['Team', 'Projects', 'Joined', 'Status']}
-        headerGridClass="grid-cols-[2.4fr_1fr_1fr_1fr_1fr_44px]"
+      <DataTable
+        columns={teamColumns}
+        rows={employees}
+        rowKey="id"
         isLoading={loading}
-        isEmpty={employees.length === 0}
-        emptyText="No team members found."
-        rangeLabel={rangeLabel}
-        canPrev={meta.current_page > 1 && !loading}
-        canNext={meta.current_page < meta.last_page && !loading}
-        onPrev={() => loadEmployees(meta.current_page - 1)}
-        onNext={() => loadEmployees(meta.current_page + 1)}
-        rows={employees.map((employee) => (
-          <div
-            key={employee.id}
-            className="grid grid-cols-[2.4fr_1fr_1fr_1fr_1fr_44px] items-center gap-3 rounded-2xl bg-white px-4 py-3"
-          >
-            <div className="flex items-center gap-3">
-              {employee.avatar_url ? (
-                <img
-                  src={`${import.meta.env.VITE_IMAGE_BASE_URL}${employee.avatar_url}`}
-                  alt={employee.name}
-                  className="h-11 w-11 rounded-full object-cover"
-                />
-              ) : (
-                <div className="inline-flex h-11 w-11 items-center justify-center rounded-full bg-brand-soft text-sm font-semibold text-brand">
-                  {getInitials(employee.name)}
-                </div>
-              )}
-              <div className="min-w-0">
-                <p className="truncate text-sm font-semibold text-slate-900">{employee.name}</p>
-                <p className="truncate text-xs text-slate-500">{employee.email}</p>
-              </div>
-            </div>
-            <p className="text-sm text-slate-700">{employee.projects_count ?? 0}</p>
-            <p className="text-sm text-slate-700">{formatDate(employee.created_at)}</p>
-            <div className="flex items-center gap-2">
-              <StatusSwitch
-                checked={Boolean(employee.is_active)}
-                disabled={!canToggleStatus}
-                onChange={() => handleToggleStatus(employee)}
-                label={`Toggle status for ${employee.name}`}
-              />
-              {/* <span className={`text-xs font-medium ${employee.is_active ? 'text-emerald-700' : 'text-slate-500'}`}>
-                {employee.is_active ? 'Active' : 'Inactive'}
-              </span> */}
-            </div>
-            <div className="relative">
-              <button
-                type="button"
-                onClick={() => setOpenMenuId((prev) => (prev === employee.id ? null : employee.id))}
-                className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-slate-500 hover:bg-slate-100 hover:text-slate-800"
-              >
-                <MoreVertical className="h-4 w-4" />
-              </button>
-              {openMenuId === employee.id ? (
-                <div className="absolute right-0 top-10 z-20 w-36 rounded-lg border border-app-border bg-white py-1 shadow-elevated">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setViewEmployee(employee)
-                      setOpenMenuId(null)
-                    }}
-                    className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-slate-700 hover:bg-slate-50"
-                  >
-                    <Eye className="h-4 w-4" /> View
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setEditEmployee(employee)
-                      setOpenMenuId(null)
-                    }}
-                    className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-slate-700 hover:bg-slate-50"
-                  >
-                    <Pencil className="h-4 w-4" /> Edit
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setDeleteEmployee(employee)
-                      setOpenMenuId(null)
-                    }}
-                    className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-red-600 hover:bg-red-50"
-                  >
-                    <Trash2 className="h-4 w-4" /> Delete
-                  </button>
-                </div>
-              ) : null}
-            </div>
-          </div>
-        ))}
+        emptyMessage="No team members found."
+        footerPagination={{
+          rangeLabel,
+          canPrev: meta.current_page > 1 && !loading,
+          canNext: meta.current_page < meta.last_page && !loading,
+          onPrev: () => setPage((p) => Math.max(1, p - 1)),
+          onNext: () => setPage((p) => p + 1),
+        }}
       />
 
       <EmployeeFormModal

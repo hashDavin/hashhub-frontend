@@ -22,7 +22,7 @@ export const userService = {
     })
   },
   listEmployees(params = {}) {
-    return apiClient.get('/employees', { params }).then((res) => {
+    return apiClient.get('/users', { params }).then((res) => {
       const payload = res.data?.data
       if (Array.isArray(payload)) {
         const page = Number(params.page || 1)
@@ -41,22 +41,19 @@ export const userService = {
     })
   },
   getEmployee(id) {
-    return apiClient.get(`/employees/${id}`)
+    return apiClient.get(`/users/${id}`)
   },
   createEmployee(payload) {
-    return apiClient.post('/employees', payload, {
+    return apiClient.post('/users', payload, {
       headers: { 'Content-Type': 'multipart/form-data' },
     })
   },
   updateEmployee(id, payload) {
-    return apiClient.post(`/employees/${id}?_method=PUT`, payload, {
+    return apiClient.post(`/users/${id}?_method=PUT`, payload, {
       headers: { 'Content-Type': 'multipart/form-data' },
     })
   },
   deleteEmployee(id) {
-    return apiClient.delete(`/employees/${id}`)
-  },
-  toggleEmployeeStatus(id) {
-    return apiClient.patch(`/employees/${id}/status`)
+    return apiClient.delete(`/users/${id}`)
   },
 }

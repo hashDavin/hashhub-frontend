@@ -1,6 +1,6 @@
 /** Extract user-facing message from axios/API errors (Laravel validation, etc.). */
 export function getErrorMessage(error, fallback = 'Something went wrong.') {
-  const data = error?.response?.data
+  const data = error?.response?.data ?? error?.data
   const msg = data?.message
   if (typeof msg === 'string' && msg.trim()) return msg
   if (msg && typeof msg === 'object') {

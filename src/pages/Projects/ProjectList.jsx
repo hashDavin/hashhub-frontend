@@ -1,16 +1,23 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
-import { Eye, MoreVertical, Pencil, Trash2 } from 'lucide-react'
+import { Eye, Pencil, Trash2 } from 'lucide-react'
 import PageHeader from '@/components/common/PageHeader'
-import EntityListCard from '@/components/common/EntityListCard'
+import DataTable from '@/components/tables/DataTable'
 import ConfirmationModal from '@/components/modals/ConfirmationModal'
 import ModalShell from '@/components/modals/ModalShell'
 import ProjectForm from '@/components/projects/ProjectForm'
 import Button from '@/components/ui/Button'
+import StatusSwitch from '@/components/ui/StatusSwitch'
 import { useToast } from '@/components/notifications/ToastProvider'
-import { projectService } from '@/services/projectService'
 import { useProjectPermissions } from '@/hooks/useProjectPermissions'
 import { getErrorMessage } from '@/utils/errorMessage'
+import {
+  useGetProjectsQuery,
+  useCreateProjectMutation,
+  useUpdateProjectMutation,
+  useToggleProjectStatusMutation,
+  useDeleteProjectMutation,
+} from '@/store/hashHubApi'
 
 let searchTimer
 
@@ -19,12 +26,9 @@ function ProjectList() {
   const [searchParams, setSearchParams] = useSearchParams()
   const toast = useToast()
   const { canManageProjects } = useProjectPermissions()
-  const [items, setItems] = useState([])
-  const [meta, setMeta] = useState({ current_page: 1, last_page: 1, total: 0 })
-  const [loading, setLoading] = useState(true)
+  const [page, setPage] = useState(1)
   const [search, setSearch] = useState('')
   const [debouncedSearch, setDebouncedSearch] = useState('')
-  const [openMenuId, setOpenMenuId] = useState(null)
   const [openCreateModal, setOpenCreateModal] = useState(false)
   const [createSubmitting, setCreateSubmitting] = useState(false)
   const [editTarget, setEditTarget] = useState(null)
@@ -32,29 +36,24 @@ function ProjectList() {
   const [deleteTarget, setDeleteTarget] = useState(null)
   const [deleteLoading, setDeleteLoading] = useState(false)
 
-  const load = useCallback(
-    async (page = 1) => {
-      setLoading(true)
-      try {
-        const { items: rows, meta: m } = await projectService.list({
-          page,
-          search: debouncedSearch || undefined,
-        })
-        setItems(rows)
-        setMeta({
-          current_page: m.current_page,
-          last_page: m.last_page,
-          total: m.total,
-        })
-      } catch (err) {
-        setItems([])
-        toast.error(getErrorMessage(err, 'Failed to load projects.'))
-      } finally {
-        setLoading(false)
-      }
-    },
-    [debouncedSearch, toast]
-  )
+  const perPage = 15
+
+  const {
+    data: listData,
+    isLoading,
+    isFetching,
+    isError,
+    error: listError,
+  } = useGetProjectsQuery({
+    page,
+    per_page: perPage,
+    search: debouncedSearch || undefined,
+  })
+
+  const [createProject] = useCreateProjectMutation()
+  const [updateProject] = useUpdateProjectMutation()
+  const [toggleProjectStatus] = useToggleProjectStatusMutation()
+  const [deleteProject] = useDeleteProjectMutation()
 
   useEffect(() => {
     clearTimeout(searchTimer)
@@ -63,8 +62,19 @@ function ProjectList() {
   }, [search])
 
   useEffect(() => {
-    load(1)
-  }, [load])
+    setPage(1)
+  }, [debouncedSearch])
+
+  useEffect(() => {
+    if (isError && listError) {
+      toast.error(getErrorMessage(listError, 'Failed to load projects.'))
+    }
+  }, [isError, listError, toast])
+
+  const items = listData?.items ?? []
+  const meta = listData?.meta ?? { current_page: 1, last_page: 1, total: 0, per_page: perPage }
+
+  const loading = isLoading || isFetching
 
   useEffect(() => {
     const editId = searchParams.get('edit')
@@ -78,26 +88,114 @@ function ProjectList() {
     }
   }, [canManageProjects, items, searchParams, setSearchParams])
 
-  const handlePageChange = (page) => {
-    load(page)
-  }
-
   const rangeLabel = useMemo(() => {
     if (meta.total === 0) return '0-0 of 0'
-    const perPage = 15
     const start = (meta.current_page - 1) * perPage + 1
     const end = Math.min(meta.total, meta.current_page * perPage)
     return `${start}-${end} of ${meta.total}`
-  }, [meta.current_page, meta.total])
+  }, [meta.current_page, meta.total, perPage])
+
+  const projectColumns = useMemo(
+    () => [
+      {
+        key: 'name',
+        header: 'Name',
+        className: 'min-w-[180px]',
+        render: (project) => (
+          <p className="truncate font-semibold text-slate-900">{project.name}</p>
+        ),
+      },
+      {
+        key: 'description',
+        header: 'Description',
+        className: 'min-w-[260px]',
+        render: (project) => (
+          <p className="truncate text-slate-600">{project.description || 'No description'}</p>
+        ),
+      },
+      {
+        key: 'status',
+        header: 'Status',
+        className: 'w-36',
+        render: (project) => (
+          <StatusSwitch
+            checked={project.status === 'active'}
+            disabled={!canManageProjects}
+            onChange={async () => {
+              try {
+                const res = await toggleProjectStatus(project.id).unwrap()
+                toast.success(res?.message || 'Project status updated.')
+              } catch (err) {
+                toast.error(getErrorMessage(err, 'Failed to update project status.'))
+              }
+            }}
+            label={`Toggle status for ${project.name}`}
+          />
+        ),
+      },
+      {
+        key: 'assigned',
+        header: 'Assigned',
+        className: 'w-28',
+        render: (project) => (
+          <span className="tabular-nums text-slate-700">{project.assigned_users_count ?? 0}</span>
+        ),
+      },
+      {
+        key: 'actions',
+        header: '',
+        align: 'right',
+        className: 'w-40',
+        thClassName: 'w-40',
+        render: (project) => (
+          <div className="flex justify-end gap-1">
+            <button
+              type="button"
+              onClick={() => navigate(`/projects/${project.id}`)}
+              className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-slate-500 hover:bg-slate-100 hover:text-brand"
+              aria-label={`View ${project.name}`}
+            >
+              <Eye className="h-4 w-4" />
+            </button>
+            {canManageProjects ? (
+              <>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setEditTarget(project)
+                  }}
+                  className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-slate-500 hover:bg-slate-100 hover:text-brand"
+                  aria-label={`Edit ${project.name}`}
+                >
+                  <Pencil className="h-4 w-4" />
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setDeleteTarget(project)}
+                  className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-red-600 hover:bg-red-50"
+                  aria-label={`Delete ${project.name}`}
+                >
+                  <Trash2 className="h-4 w-4" />
+                </button>
+              </>
+            ) : null}
+          </div>
+        ),
+      },
+    ],
+    [canManageProjects, navigate, toggleProjectStatus, toast]
+  )
 
   const confirmDelete = async () => {
     if (!deleteTarget) return
     setDeleteLoading(true)
     try {
-      await projectService.remove(deleteTarget.id)
+      await deleteProject(deleteTarget.id).unwrap()
       setDeleteTarget(null)
       toast.success('Project deleted successfully.')
-      await load(meta.current_page)
+      if (items.length === 1 && page > 1) {
+        setPage(page - 1)
+      }
     } catch (err) {
       toast.error(getErrorMessage(err, 'Failed to delete project.'))
     } finally {
@@ -108,7 +206,8 @@ function ProjectList() {
   const handleCreateProject = async (payload) => {
     setCreateSubmitting(true)
     try {
-      const created = await projectService.create(payload)
+      const res = await createProject(payload).unwrap()
+      const created = res.data
       toast.success('Project created successfully.')
       setOpenCreateModal(false)
       navigate(`/projects/${created.id}`)
@@ -123,10 +222,9 @@ function ProjectList() {
     if (!editTarget) return
     setEditSubmitting(true)
     try {
-      await projectService.update(editTarget.id, payload)
+      await updateProject({ id: editTarget.id, body: payload }).unwrap()
       toast.success('Project updated successfully.')
       setEditTarget(null)
-      await load(meta.current_page)
     } catch (err) {
       toast.error(getErrorMessage(err, 'Failed to update project.'))
     } finally {
@@ -156,81 +254,19 @@ function ProjectList() {
           ) : null
         }
       />
-      <EntityListCard
-        headers={['Project', 'Status', 'Assigned', 'Actions']}
-        headerGridClass="grid-cols-[2.8fr_1fr_1fr_120px]"
+      <DataTable
+        columns={projectColumns}
+        rows={items}
+        rowKey="id"
         isLoading={loading}
-        isEmpty={items.length === 0}
-        emptyText="No projects found."
-        rangeLabel={rangeLabel}
-        canPrev={meta.current_page > 1 && !loading}
-        canNext={meta.current_page < meta.last_page && !loading}
-        onPrev={() => handlePageChange(meta.current_page - 1)}
-        onNext={() => handlePageChange(meta.current_page + 1)}
-        rows={items.map((project) => (
-          <div
-            key={project.id}
-            className="grid grid-cols-[2.8fr_1fr_1fr_120px] items-center gap-3 rounded-2xl bg-white px-4 py-3"
-          >
-            <div>
-              <p className="truncate text-sm font-semibold text-slate-900">{project.name}</p>
-              <p className="truncate text-xs text-slate-500">
-                {project.description || 'No description'}
-              </p>
-            </div>
-            <span className="w-fit rounded-full border border-slate-300 px-2 py-0.5 text-xs text-slate-600">
-              {project.status}
-            </span>
-            <p className="text-sm text-slate-700">{project.assigned_users_count ?? 0}</p>
-            <div className="relative justify-self-end">
-              <button
-                type="button"
-                onClick={() => setOpenMenuId((prev) => (prev === project.id ? null : project.id))}
-                className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-slate-500 hover:bg-slate-100 hover:text-slate-800"
-              >
-                <MoreVertical className="h-4 w-4" />
-              </button>
-              {openMenuId === project.id ? (
-                <div className="absolute right-0 top-10 z-20 w-40 rounded-lg border border-app-border bg-white py-1 shadow-elevated">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      navigate(`/projects/${project.id}`)
-                      setOpenMenuId(null)
-                    }}
-                    className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-slate-700 hover:bg-slate-50"
-                  >
-                    <Eye className="h-4 w-4" /> View
-                  </button>
-                  {canManageProjects ? (
-                    <>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setEditTarget(project)
-                          setOpenMenuId(null)
-                        }}
-                        className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-slate-700 hover:bg-slate-50"
-                      >
-                        <Pencil className="h-4 w-4" /> Edit project
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setDeleteTarget(project)
-                          setOpenMenuId(null)
-                        }}
-                        className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-red-600 hover:bg-red-50"
-                      >
-                        <Trash2 className="h-4 w-4" /> Delete project
-                      </button>
-                    </>
-                  ) : null}
-                </div>
-              ) : null}
-            </div>
-          </div>
-        ))}
+        emptyMessage="No projects found."
+        footerPagination={{
+          rangeLabel,
+          canPrev: meta.current_page > 1 && !loading,
+          canNext: meta.current_page < meta.last_page && !loading,
+          onPrev: () => setPage((p) => Math.max(1, p - 1)),
+          onNext: () => setPage((p) => p + 1),
+        }}
       />
       <ConfirmationModal
         open={!!deleteTarget}

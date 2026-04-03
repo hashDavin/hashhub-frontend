@@ -8,18 +8,8 @@ import Spinner from '@/components/ui/Spinner'
 import SvgIcon from '@/components/ui/SvgIcon'
 import { createEmployeeSchema, editEmployeeSchema } from '@/validations/userSchemas'
 
-function EmployeeFormModal({
-  open,
-  mode = 'create',
-  employee,
-  saving,
-  error,
-  onClose,
-  onSubmit,
-}) {
+function EmployeeFormModal({ open, mode = 'create', employee, saving, error, onClose, onSubmit }) {
   const [showPassword, setShowPassword] = useState(false)
-  const [avatarFileName, setAvatarFileName] = useState('')
-  const [avatarPreview, setAvatarPreview] = useState('')
   const {
     register,
     reset,
@@ -34,19 +24,14 @@ function EmployeeFormModal({
       name: '',
       email: '',
       password: '',
-      remove_avatar: false,
     },
   })
-  const avatarField = register('avatar')
 
   useEffect(() => {
     if (!open) {
       setShowPassword(false)
-      setAvatarFileName('')
-      if (avatarPreview) URL.revokeObjectURL(avatarPreview)
-      setAvatarPreview('')
     }
-  }, [open, avatarPreview])
+  }, [open])
 
   useEffect(() => {
     if (!open) return
@@ -54,7 +39,6 @@ function EmployeeFormModal({
       name: employee?.name || '',
       email: employee?.email || '',
       password: '',
-      remove_avatar: false,
     })
   }, [open, employee, reset])
 
@@ -90,80 +74,45 @@ function EmployeeFormModal({
           error={errors.email?.message}
           {...register('email')}
         />
-        <label htmlFor={`${mode}-password`} className="block space-y-2">
-          <div className="flex items-center justify-between gap-3">
-            <span className="text-sm font-medium text-slate-700">
-              {mode === 'create' ? 'Password' : 'New password (optional)'}
-            </span>
-            <button
-              type="button"
-              onClick={generatePassword}
-              className="text-xs font-medium text-brand hover:underline"
-            >
-              Generate password
-            </button>
-          </div>
-          <div className="relative">
-            <input
-              id={`${mode}-password`}
-              type={showPassword ? 'text' : 'password'}
-              className={`h-10 w-full rounded-lg border px-3 pr-10 text-sm ${
-                errors.password
-                  ? 'border-red-300 focus:border-red-500 focus:ring-2 focus:ring-red-100'
-                  : 'border-app-border focus:border-brand focus:ring-2 focus:ring-brand-soft'
-              }`}
-              {...register('password')}
-            />
-            <button
-              type="button"
-              onClick={() => setShowPassword((prev) => !prev)}
-              className="absolute inset-y-0 right-0 inline-flex w-10 items-center justify-center text-slate-500 hover:text-slate-800"
-              aria-label={showPassword ? 'Hide password' : 'Show password'}
-            >
-              <SvgIcon name={showPassword ? 'eyeOff' : 'eye'} size={18} />
-            </button>
-          </div>
-          {errors.password ? <span className="text-xs text-red-600">{errors.password.message}</span> : null}
-        </label>
-        <label htmlFor={`${mode}-avatar`} className="block space-y-2">
-          <span className="text-sm font-medium text-slate-700">
-            {mode === 'create' ? 'Profile Picture (optional)' : 'Replace photo (optional)'}
-          </span>
-          <input
-            id={`${mode}-avatar`}
-            type="file"
-            accept="image/png,image/jpeg,image/webp"
-            className="hidden"
-            name={avatarField.name}
-            ref={avatarField.ref}
-            onBlur={avatarField.onBlur}
-            onChange={(e) => {
-              avatarField.onChange(e)
-              const file = e.target.files?.[0]
-              setAvatarFileName(file?.name || '')
-              if (avatarPreview) URL.revokeObjectURL(avatarPreview)
-              setAvatarPreview(file ? URL.createObjectURL(file) : '')
-            }}
-          />
-          <div className="rounded-lg border border-app-border bg-white p-3">
-            <div className="flex items-center gap-3">
-              <label
-                htmlFor={`${mode}-avatar`}
-                className="cursor-pointer rounded-md border border-app-border px-3 py-1.5 text-sm font-medium text-slate-700 hover:bg-slate-50"
+        {mode === 'create' ? (
+          <label htmlFor={`${mode}-password`} className="block space-y-2">
+            <div className="flex items-center justify-between gap-3">
+              <span className="text-sm font-medium text-slate-700">Password</span>
+              <button
+                type="button"
+                onClick={generatePassword}
+                className="text-xs font-medium text-brand hover:underline"
               >
-                Upload image
-              </label>
-              <span className="truncate text-sm text-slate-500">{avatarFileName || 'No file selected'}</span>
+                Generate password
+              </button>
             </div>
-            {avatarPreview ? (
-              <div className="mt-3 flex items-center gap-3 rounded-md bg-slate-50 p-2">
-                <img src={avatarPreview} alt="Selected avatar preview" className="h-12 w-12 rounded-full object-cover" />
-                <span className="text-xs text-slate-500">Preview</span>
-              </div>
+            <div className="relative">
+              <input
+                id={`${mode}-password`}
+                type={showPassword ? 'text' : 'password'}
+                placeholder="Enter password"
+                className={`h-10 w-full rounded-lg border px-3 pr-10 text-sm ${
+                  errors.password
+                    ? 'border-red-300 focus:border-red-500 focus:ring-2 focus:ring-red-100'
+                    : 'border-app-border focus:border-brand focus:ring-2 focus:ring-brand-soft'
+                }`}
+                {...register('password')}
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword((prev) => !prev)}
+                className="absolute inset-y-0 right-0 inline-flex w-10 items-center justify-center text-slate-500 hover:text-slate-800"
+                aria-label={showPassword ? 'Hide password' : 'Show password'}
+              >
+                <SvgIcon name={showPassword ? 'eyeOff' : 'eye'} size={18} />
+              </button>
+            </div>
+            {errors.password ? (
+              <span className="text-xs text-red-600">{errors.password.message}</span>
             ) : null}
-          </div>
-        </label>
-        {/* {error ? <p className="text-sm text-red-600">{error}</p> : null} */}
+          </label>
+        ) : null}
+        {error ? <p className="text-sm text-red-600">{error}</p> : null}
         <div className="flex justify-end gap-2">
           <Button type="button" variant="secondary" onClick={onClose} disabled={saving}>
             Cancel

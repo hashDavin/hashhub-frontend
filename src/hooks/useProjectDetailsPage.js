@@ -120,7 +120,7 @@ export function useProjectDetailsPage() {
         await projectService.createCredential(id, body)
         toast.success('Credential added successfully.')
       } else if (credModal.row) {
-        await projectService.updateCredential(credModal.row.id, body)
+        await projectService.updateCredential(id, credModal.row.id, body)
         toast.success('Credential updated successfully.')
       }
       setCredModal({ mode: null, row: null })
@@ -136,7 +136,7 @@ export function useProjectDetailsPage() {
     if (!deleteCred) return
     setDeleteCredLoading(true)
     try {
-      await projectService.deleteCredential(deleteCred.id)
+      await projectService.deleteCredential(id, deleteCred.id)
       setDeleteCred(null)
       await loadCredentials(credMeta.current_page)
       toast.success('Credential deleted successfully.')
