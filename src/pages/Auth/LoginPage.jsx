@@ -7,8 +7,10 @@ import { setAuth } from '@/store/authSlice'
 import { useAuth } from '@/hooks/useAuth'
 import { authService } from '@/services/authService'
 import { getErrorMessage } from '@/utils/errorMessage'
+import { applyLaravelFieldErrors, mirrorAuthCredentialErrors } from '@/utils/apiErrors'
 import { useToast } from '@/components/notifications/ToastProvider'
 import Button from '@/components/ui/Button'
+import Spinner from '@/components/ui/Spinner'
 import SvgIcon from '@/components/ui/SvgIcon'
 import TextInput from '@/components/forms/TextInput'
 import hashhubLogo from '@/assets/images/hashhub_logo.png'
@@ -21,11 +23,12 @@ function LoginPage() {
   const { isAuthenticated } = useAuth()
   const toast = useToast()
 
-  const [submitError, setSubmitError] = useState('')
   const [showPassword, setShowPassword] = useState(false)
   const {
     register,
     handleSubmit,
+    setError,
+    clearErrors,
     formState: { errors, isSubmitting },
   } = useForm({
     resolver: yupResolver(loginSchema),
@@ -44,7 +47,7 @@ function LoginPage() {
   }, [isAuthenticated, navigate])
 
   const onSubmit = async ({ email, password }) => {
-    setSubmitError('')
+    clearErrors()
     try {
       const data = await authService.login({
         email,
@@ -55,7 +58,6 @@ function LoginPage() {
       if (isInactive) {
         const inactiveMessage =
           'Your account is currently inactive. Please contact your administrator for assistance.'
-        setSubmitError(inactiveMessage)
         toast.error(inactiveMessage)
         return
       }
@@ -63,9 +65,16 @@ function LoginPage() {
       dispatch(setAuth({ token: data.token, user: data.user }))
       navigate('/dashboard', { replace: true })
     } catch (err) {
-      const message = getErrorMessage(err, 'Login failed.')
-      setSubmitError(message);
-      toast.error(message);
+      const status = err.response?.status
+      const apiErrors = err.response?.data?.errors
+
+      if (status === 422 && apiErrors && typeof apiErrors === 'object') {
+        applyLaravelFieldErrors(setError, apiErrors)
+        mirrorAuthCredentialErrors(setError, apiErrors)
+        return
+      }
+
+      toast.error(getErrorMessage(err, 'Unable to sign in. Please try again later.'))
     }
   }
 
@@ -80,21 +89,17 @@ function LoginPage() {
       {/* Content */}
       <div className="relative z-10 flex min-h-screen items-center justify-center px-4">
         <div className="w-full max-w-md rounded-2xl bg-white backdrop-blur-xl shadow-2xl border border-white/20">
-
           {/* Header */}
           <div className="flex flex-col items-center gap-3 px-8 pt-8 pb-6">
             <div className="h-16 w-48 overflow-hidden">
               <img src={hashhubLogo} alt="HashHub" className="h-full" />
             </div>
-            <p className="text-sm text-gray-500">
-            Sign in to manage your workspace
-            </p>
+            <p className="text-sm text-gray-500">Sign in to manage your workspace</p>
           </div>
 
           {/* Form */}
           <div className="px-8 pb-8">
             <form onSubmit={handleSubmit(onSubmit)} className="space-y-5" noValidate>
-
               <TextInput
                 id="email"
                 name="email"
@@ -108,20 +113,18 @@ function LoginPage() {
 
               {/* Password */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Password
-                </label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Password</label>
 
                 <div className="relative">
                   <input
                     id="password"
-                    type={showPassword ? "text" : "password"}
+                    type={showPassword ? 'text' : 'password'}
                     placeholder="••••••••"
                     autoComplete="current-password"
                     className={`w-full h-11 rounded-xl border px-4 pr-12 text-sm outline-none transition ${
-                      errors.password
-                        ? "border-red-300 focus:ring-2 focus:ring-red-100 focus:border-red-500"
-                        : "border-gray-300 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                      errors.password || errors.email
+                        ? 'border-red-300 focus:ring-2 focus:ring-red-100 focus:border-red-500'
+                        : 'border-gray-300 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500'
                     }`}
                     {...register('password')}
                   />
@@ -131,7 +134,7 @@ function LoginPage() {
                     onClick={() => setShowPassword((prev) => !prev)}
                     className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
                   >
-                    <SvgIcon name={showPassword ? "eyeOff" : "eye"} size={18} />
+                    <SvgIcon name={showPassword ? 'eyeOff' : 'eye'} size={18} />
                   </button>
                 </div>
                 {errors.password ? (
@@ -150,10 +153,7 @@ function LoginPage() {
                   Remember me
                 </label>
 
-                <button
-                  type="button"
-                  className="text-[#3BC2DB] font-medium"
-                >
+                <button type="button" className="font-medium text-brand">
                   Forgot password?
                 </button>
               </div>
@@ -171,11 +171,13 @@ function LoginPage() {
                 disabled={isSubmitting}
                 size="md"
                 className="w-full"
-               variant="primary"
+                variant="primary"
               >
-                {isSubmitting ? "Signing in..." : "Sign In"}
+                <span className="inline-flex items-center justify-center gap-2">
+                  {isSubmitting ? <Spinner size="sm" className="text-white" /> : null}
+                  Sign In
+                </span>
               </Button>
-
             </form>
           </div>
         </div>

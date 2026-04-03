@@ -1,28 +1,23 @@
-import { cn } from '@/utils/cn';
-import hashhubLogo from '@/assets/images/hashhub_logo.png';
+import { cn } from '@/utils/cn'
+import RingSpinner from '@/components/ui/RingSpinner'
 
-function HashHubLoader({
-  label = 'Loading...',
-  size = 'md',
-  inline = false,
-  className,
-  textClassName,
-}) {
-  const badgeSize = size === 'sm' ? 'h-6 w-6 text-[10px]' : 'h-8 w-8 text-xs'
-  const ringSize = size === 'sm' ? 'h-9 w-9 border-2' : 'h-11 w-11 border-2'
+function HashHubLoader({ label = '', size = 'md', inline = false, lightOnDark = false, className, textClassName }) {
   const gap = size === 'sm' ? 'gap-2' : 'gap-3'
+  const aria = label || 'Busy'
+  const spinnerSize = size === 'sm' ? 'sm' : 'md'
+  const tone = lightOnDark ? 'onDark' : 'default'
 
   if (inline) {
-    return (
-      <span className={cn('inline-flex items-center', className)} role="status" aria-label={label}>
-        <span className={cn('inline-block animate-spin rounded-full border-current border-t-transparent text-current', size === 'sm' ? 'h-4 w-4 border-2' : 'h-5 w-5 border-2')} />
-      </span>
-    )
+    return <RingSpinner size={spinnerSize} tone={tone} className={className} />
   }
 
   return (
-    <div className={cn('inline-flex flex-col items-center', gap, className)} role="status" aria-label={label}>
-      <img src={hashhubLogo} alt="HashHub" className="h-10 w-auto" />
+    <div
+      className={cn('inline-flex flex-col items-center', gap, className)}
+      role="status"
+      aria-label={aria}
+    >
+      <RingSpinner size={spinnerSize} tone="default" />
       {label ? <span className={cn('text-sm text-slate-500', textClassName)}>{label}</span> : null}
     </div>
   )

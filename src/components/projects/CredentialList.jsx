@@ -74,7 +74,7 @@ function CredentialListBody({ items, isLoading, canManage, onEdit, onDelete }) {
       <tr>
         <td colSpan={5} className="px-4 py-12 text-center">
           <div className="inline-flex flex-col items-center gap-2 text-slate-500">
-            <HashHubLoader label="Loading..." />
+            <HashHubLoader />
           </div>
         </td>
       </tr>

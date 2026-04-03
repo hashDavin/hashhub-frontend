@@ -8,7 +8,7 @@ function StatusSwitch({ checked, disabled, onChange, label }) {
       disabled={disabled}
       onClick={onChange}
       className={`relative inline-flex h-6 w-11 items-center rounded-full transition ${
-        checked ? 'bg-blue-500' : 'bg-slate-300'
+        checked ? 'bg-brand' : 'bg-slate-300'
       } ${disabled ? 'cursor-not-allowed opacity-60' : 'cursor-pointer'}`}
     >
       <span

@@ -48,8 +48,8 @@ function ConfirmationModal({
             disabled={loading}
           >
             <span className="inline-flex items-center justify-center gap-2">
-              {loading ? <HashHubLoader inline size="sm" className="text-white" /> : null}
-              {loading ? `${confirmLabel}…` : confirmLabel}
+              {loading ? <HashHubLoader inline size="sm" lightOnDark /> : null}
+              {confirmLabel}
             </span>
           </Button>
         </div>

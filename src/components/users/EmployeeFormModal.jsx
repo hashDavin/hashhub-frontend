@@ -4,6 +4,7 @@ import { useForm } from 'react-hook-form'
 import ModalShell from '@/components/modals/ModalShell'
 import TextInput from '@/components/forms/TextInput'
 import Button from '@/components/ui/Button'
+import Spinner from '@/components/ui/Spinner'
 import SvgIcon from '@/components/ui/SvgIcon'
 import { createEmployeeSchema, editEmployeeSchema } from '@/validations/userSchemas'
 
@@ -168,13 +169,10 @@ function EmployeeFormModal({
             Cancel
           </Button>
           <Button type="submit" disabled={saving || isSubmitting}>
-            {saving || isSubmitting
-              ? mode === 'create'
-                ? 'Creating...'
-                : 'Saving...'
-              : mode === 'create'
-                ? 'Create Team Member'
-                : 'Save Changes'}
+            <span className="inline-flex items-center gap-2">
+              {saving || isSubmitting ? <Spinner size="sm" /> : null}
+              {mode === 'create' ? 'Create Team Member' : 'Save Changes'}
+            </span>
           </Button>
         </div>
       </form>

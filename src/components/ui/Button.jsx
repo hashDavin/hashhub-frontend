@@ -3,7 +3,7 @@ import SvgIcon from '@/components/ui/SvgIcon'
 
 const variants = {
   primary:
-    'bg-[#3BC2DB] text-white hover:bg-white hover:text-[#3BC2DB] hover:border-[#3BC2DB] hover:border focus:ring-brand-soft disabled:pointer-events-none disabled:opacity-50',
+    'border border-transparent bg-brand text-white shadow-sm hover:bg-brand-hover hover:text-white focus:ring-2 focus:ring-brand-soft active:bg-brand-hover disabled:pointer-events-none disabled:opacity-50',
   secondary:
     'border border-app-border bg-white text-slate-700 hover:bg-slate-50 focus:ring-brand-soft disabled:pointer-events-none disabled:opacity-50',
   danger:
@@ -15,10 +15,10 @@ const variants = {
 }
 
 const sizes = {
-  md: 'h-10 px-4 text-sm',
-  sm: 'h-8 px-3 text-xs',
-  lg: 'h-12 px-5 text-base',
-  icon: 'h-9 w-9 p-0 inline-flex items-center justify-center',
+  md: 'h-11 min-h-[2.75rem] rounded-xl px-5 text-sm font-semibold',
+  sm: 'h-8 rounded-lg px-3 text-xs',
+  lg: 'h-12 rounded-xl px-5 text-base',
+  icon: 'h-9 w-9 rounded-lg p-0',
 }
 
 function Button({
@@ -45,7 +45,7 @@ function Button({
       title={titleAttr}
       aria-label={ariaLabel}
       className={cn(
-        'inline-flex items-center justify-center gap-2 rounded-lg font-medium transition focus:outline-none focus:ring-2',
+        'inline-flex items-center justify-center gap-2 font-medium transition focus:outline-none focus:ring-2',
         variants[variant],
         sizes[size],
         className

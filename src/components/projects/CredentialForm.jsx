@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import Button from '@/components/ui/Button'
+import Spinner from '@/components/ui/Spinner'
 import TextInput from '@/components/forms/TextInput'
 import { CREDENTIAL_TYPE_OPTIONS } from '@/constants/project'
 
@@ -311,7 +312,10 @@ function CredentialForm({ initial = {}, onSubmit, onCancel, isSubmitting }) {
           Cancel
         </Button>
         <Button type="submit" disabled={isSubmitting}>
-          {isSubmitting ? 'Saving…' : 'Save'}
+          <span className="inline-flex items-center gap-2">
+            {isSubmitting ? <Spinner size="sm" /> : null}
+            Save
+          </span>
         </Button>
       </div>
     </form>

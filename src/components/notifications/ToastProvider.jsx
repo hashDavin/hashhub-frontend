@@ -28,7 +28,7 @@ function ToastProvider({ children }) {
     <ToastContext.Provider value={value}>
       {children}
       <div
-        className="pointer-events-none fixed bottom-4 right-4 z-[100] flex max-w-sm flex-col gap-2 p-0 sm:max-w-md"
+        className="pointer-events-none fixed bottom-4 right-4 z-[10050] flex max-w-sm flex-col gap-2 p-0 sm:max-w-md"
         aria-live="polite"
       >
         {toasts.map((t) => (

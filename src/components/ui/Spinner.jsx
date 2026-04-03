@@ -10,7 +10,7 @@ function Spinner({ className, size = 'md' }) {
         className
       )}
       role="status"
-      aria-label="Loading"
+      aria-label="Busy"
     />
   )
 }

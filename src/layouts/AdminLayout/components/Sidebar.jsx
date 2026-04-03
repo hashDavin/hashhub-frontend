@@ -1,9 +1,8 @@
-import { ChevronLeft, ChevronRight } from 'lucide-react'
 import sidebarConfig from '@/layouts/AdminLayout/sidebarConfig'
 import SidebarSection from '@/layouts/AdminLayout/components/SidebarSection'
 import hashhubLogo from '@/assets/images/hashhub_logo.png'
 
-function Sidebar({ role, collapsed, onToggleCollapse, onCloseMobile }) {
+function Sidebar({ role, onCloseMobile }) {
   const visibleSections = sidebarConfig
     .map((section) => {
       const items = section.items
@@ -19,23 +18,11 @@ function Sidebar({ role, collapsed, onToggleCollapse, onCloseMobile }) {
     .filter((section) => section.items.length > 0)
 
   return (
-    <aside className="flex h-full w-full flex-col border border-app-border bg-white p-3 shadow-card">
-      <div className="flex items-center justify-between px-3 py-3">
-        {!collapsed ? (
-          <div className="inline-flex items-center gap-3 rounded-xl  px-3 py-2 text-white">
-       <img src={hashhubLogo} alt="HashHub" className="h-18 w-auto" />
-          </div>
-        ) : (
-          <span className="sr-only">HashHub</span>
-        )}
-        <button
-          type="button"
-          onClick={onToggleCollapse}
-          className="hidden rounded-lg p-1.5 text-slate-500 transition hover:bg-slate-200 hover:text-slate-900 lg:inline-flex"
-          aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
-        >
-          {collapsed ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
-        </button>
+    <aside className="flex h-full w-full flex-col border border-app-border bg-white p-2 shadow-card">
+      <div className="flex items-center px-2 py-2.5">
+        <div className="inline-flex items-center rounded-lg px-1 py-1 text-white">
+          <img src={hashhubLogo} alt="HashHub" className="h-14 w-auto max-w-[9.5rem] object-contain object-left" />
+        </div>
       </div>
 
       <nav className="flex-1 space-y-5 overflow-y-auto px-1 pb-4 pt-2">
@@ -44,7 +31,7 @@ function Sidebar({ role, collapsed, onToggleCollapse, onCloseMobile }) {
             key={section.title}
             title={section.title}
             items={section.items}
-            collapsed={collapsed}
+            collapsed={false}
             onNavigate={onCloseMobile}
           />
         ))}

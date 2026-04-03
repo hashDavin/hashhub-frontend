@@ -4,15 +4,16 @@ export default {
   theme: {
     extend: {
       colors: {
+        // Logo / HASH primary: light cyan-blue — use for active states, primary actions, focus rings
         brand: {
-          DEFAULT: '#2563EB',
-          hover: '#1D4ED8',
-          soft: '#DBEAFE',
+          DEFAULT: '#3BC2DB',
+          hover: '#2AA3BA',
+          soft: '#E0F5FA',
         },
         accent: {
-          DEFAULT: '#7C3AED',
-          hover: '#6D28D9',
-          soft: '#EDE9FE',
+          DEFAULT: '#3BC2DB',
+          hover: '#2AA3BA',
+          soft: '#E0F5FA',
         },
         app: {
           bg: '#F8FAFC',

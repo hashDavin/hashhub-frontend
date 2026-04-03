@@ -43,8 +43,8 @@ function SidebarItem({ item, collapsed, onNavigate }) {
           type="button"
           onClick={() => setExpanded((prev) => !prev)}
           className={cn(
-            'flex w-full items-center rounded-xl px-3 py-2.5 text-sm transition',
-            isActive ? 'bg-[#3BC2DB] text-white' : 'text-slate-500 hover:bg-[#3BC2DB] hover:text-white'
+            'flex w-full items-center rounded-xl px-2.5 py-2.5 text-sm transition',
+            isActive ? 'bg-brand text-white' : 'text-slate-500 hover:bg-brand hover:text-white'
           )}
         >
           <Icon className="h-4 w-4 shrink-0" />
@@ -52,7 +52,10 @@ function SidebarItem({ item, collapsed, onNavigate }) {
             <>
               <span className="ml-3">{item.label}</span>
               <ChevronDown
-                className={cn('ml-auto h-4 w-4 transition-transform', expanded ? 'rotate-180' : 'rotate-0')}
+                className={cn(
+                  'ml-auto h-4 w-4 transition-transform',
+                  expanded ? 'rotate-180' : 'rotate-0'
+                )}
               />
             </>
           ) : null}
@@ -69,9 +72,9 @@ function SidebarItem({ item, collapsed, onNavigate }) {
                   to={child.path}
                   onClick={onNavigate}
                   className={cn(
-                    'flex items-center rounded-xl px-3 py-2 text-sm transition',
+                    'flex items-center rounded-xl px-2.5 py-2 text-sm transition',
                     childActive
-                      ? 'bg-[#3BC2DB] text-white'
+                      ? 'bg-brand text-white'
                       : 'text-slate-500 hover:bg-slate-100 hover:text-slate-800'
                   )}
                 >
@@ -91,8 +94,10 @@ function SidebarItem({ item, collapsed, onNavigate }) {
       to={item.path}
       onClick={item.action === 'logout' ? handleLogout : onNavigate}
       className={cn(
-        'flex items-center rounded-xl px-3 py-2.5 text-sm transition',
-        isActive ? 'bg-brand-soft text-brand' : 'text-slate-500 hover:bg-slate-100 hover:text-slate-800'
+        'flex items-center rounded-xl px-2.5 py-2.5 text-sm transition',
+        isActive
+          ? 'bg-brand text-white'
+          : 'text-slate-500 hover:bg-slate-100 hover:text-slate-800'
       )}
     >
       <Icon className="h-4 w-4 shrink-0" />

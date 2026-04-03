@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import Button from '@/components/ui/Button'
 import HashHubLoader from '@/components/common/HashHubLoader'
+import Spinner from '@/components/ui/Spinner'
 import ModalShell from '@/components/modals/ModalShell'
 import { userService } from '@/services/userService'
 
@@ -51,7 +52,7 @@ function AssignUserModal({ open, onClose, onAssign, assignedUserIds = [], isSubm
         />
         {loading ? (
           <div className="flex items-center gap-2 py-4 text-sm text-slate-500">
-            <HashHubLoader size="sm" label="Loading users..." />
+            <HashHubLoader size="sm" />
           </div>
         ) : (
           <div className="max-h-56 space-y-2 overflow-y-auto rounded-lg border border-app-border p-2">
@@ -83,7 +84,10 @@ function AssignUserModal({ open, onClose, onAssign, assignedUserIds = [], isSubm
             Cancel
           </Button>
           <Button type="submit" disabled={isSubmitting || selected.length === 0}>
-            {isSubmitting ? 'Assigning…' : 'Assign'}
+            <span className="inline-flex items-center gap-2">
+              {isSubmitting ? <Spinner size="sm" /> : null}
+              Assign
+            </span>
           </Button>
         </div>
       </form>

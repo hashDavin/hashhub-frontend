@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
-import { Eye, MoreVertical, Pencil, Trash2, X } from 'lucide-react'
+import { Eye, MoreVertical, Pencil, Trash2 } from 'lucide-react'
 import PageHeader from '@/components/common/PageHeader'
 import EntityListCard from '@/components/common/EntityListCard'
 import ConfirmationModal from '@/components/modals/ConfirmationModal'
@@ -138,11 +138,20 @@ function ProjectList() {
     <div className="space-y-6">
       <PageHeader
         title="Projects"
-        description="Manage projects and access."
+        search={{
+          value: search,
+          onChange: setSearch,
+          placeholder: 'Search project',
+        }}
+        filters={{
+          children: (
+            <p className="text-sm text-slate-500">Additional project filters can be added here.</p>
+          ),
+        }}
         action={
           canManageProjects ? (
-            <Button type="button" onClick={() => setOpenCreateModal(true)}>
-              New project
+            <Button type="button" variant="primary" onClick={() => setOpenCreateModal(true)}>
+              Create New
             </Button>
           ) : null
         }
@@ -165,7 +174,9 @@ function ProjectList() {
           >
             <div>
               <p className="truncate text-sm font-semibold text-slate-900">{project.name}</p>
-              <p className="truncate text-xs text-slate-500">{project.description || 'No description'}</p>
+              <p className="truncate text-xs text-slate-500">
+                {project.description || 'No description'}
+              </p>
             </div>
             <span className="w-fit rounded-full border border-slate-300 px-2 py-0.5 text-xs text-slate-600">
               {project.status}
@@ -220,29 +231,7 @@ function ProjectList() {
             </div>
           </div>
         ))}
-      >
-        <div className="flex items-center justify-end">
-          <div className="relative">
-            <input
-              type="text"
-              placeholder="Search project"
-              className="h-10 rounded-lg border border-app-border bg-white px-3 pr-9 text-sm outline-none focus:border-brand"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-            />
-            {search ? (
-              <button
-                type="button"
-                onClick={() => setSearch('')}
-                className="absolute inset-y-0 right-1 inline-flex w-8 items-center justify-center text-slate-400 hover:text-slate-700"
-                aria-label="Clear search"
-              >
-                <X className="h-4 w-4" />
-              </button>
-            ) : null}
-          </div>
-        </div>
-      </EntityListCard>
+      />
       <ConfirmationModal
         open={!!deleteTarget}
         title="Delete project"

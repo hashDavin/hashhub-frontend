@@ -1,13 +1,16 @@
 import { useEffect, useRef, useState } from 'react'
 import { useDispatch } from 'react-redux'
 import { Link, useNavigate } from 'react-router-dom'
-import { ChevronDown, LogOut, Menu, Settings, UserCircle2 } from 'lucide-react'
+import { Bell, ChevronDown, LogOut, Menu, Settings, User } from 'lucide-react'
 import { clearAuth } from '@/store/authSlice'
 import { authService } from '@/services/authService'
-import Button from '@/components/ui/Button'
+import Spinner from '@/components/ui/Spinner'
 import { useAuth } from '@/hooks/useAuth'
 
-function Header({ title, onToggleMobileSidebar }) {
+const menuItemClass =
+  'flex w-full items-center gap-3 px-4 py-3 text-left text-sm font-medium text-slate-700 transition hover:bg-slate-50'
+
+function Header({ onToggleMobileSidebar }) {
   const dispatch = useDispatch()
   const navigate = useNavigate()
   const { user } = useAuth()
@@ -38,66 +41,105 @@ function Header({ title, onToggleMobileSidebar }) {
     setMenuOpen(false)
   }
 
-  return (
-    <header className="sticky top-0 z-20 flex h-16 shrink-0 items-center justify-end border-b border-app-border bg-white/95 px-4 backdrop-blur lg:px-6">
-      <button
-        type="button"
-        onClick={onToggleMobileSidebar}
-        className="inline-flex rounded-lg p-2 text-slate-600 transition hover:bg-slate-100 lg:hidden"
-        aria-label="Open sidebar"
-      >
-        <Menu className="h-5 w-5" />
-      </button>
+  const displayName = user?.name?.trim() || 'User'
+  const displayEmail = user?.email || ''
 
-      <div className="flex items-center gap-2" ref={menuRef}>
+  return (
+    <header className="sticky top-0 z-20 flex h-[4.25rem] shrink-0 items-center justify-between gap-4 border-b border-slate-200/80 bg-white px-4 lg:px-8">
+      <div className="flex min-w-0 flex-1 items-center gap-3">
+        <button
+          type="button"
+          onClick={onToggleMobileSidebar}
+          className="inline-flex shrink-0 rounded-lg p-2 text-slate-600 transition hover:bg-slate-100 lg:hidden"
+          aria-label="Open sidebar"
+        >
+          <Menu className="h-5 w-5" strokeWidth={2} />
+        </button>
+      </div>
+
+      <div className="relative flex shrink-0 items-center gap-5" ref={menuRef}>
+        <button
+          type="button"
+          className="relative flex h-11 w-11 shrink-0 items-center justify-center rounded-xl text-slate-500 transition hover:bg-slate-100 hover:text-slate-700"
+          aria-label="Notifications"
+        >
+          <Bell className="h-[22px] w-[22px]" strokeWidth={1.75} />
+          <span
+            className="absolute right-2 top-2 h-2 w-2 rounded-full bg-brand ring-[3px] ring-white"
+            aria-hidden
+          />
+        </button>
+
         <button
           type="button"
           onClick={() => setMenuOpen((prev) => !prev)}
-          className="inline-flex items-center gap-2 rounded-xl border border-app-border bg-white px-3 py-2 text-sm text-slate-700 shadow-sm transition hover:bg-slate-50"
+          className="group flex max-w-[min(100vw-10rem,22rem)] items-center gap-3 rounded-lg py-1.5 pl-0 pr-0 transition hover:bg-slate-50/90 sm:gap-3.5 sm:pr-1"
           aria-haspopup="menu"
           aria-expanded={menuOpen}
-          aria-label="Open account menu"
+          aria-label="Account menu"
         >
-          <UserCircle2 className="h-4 w-4 shrink-0 text-slate-500" />
-          <span className="hidden sm:inline">Account</span>
-          <ChevronDown className="h-4 w-4 text-slate-500" />
+          <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-brand text-white">
+            <User className="h-[18px] w-[18px]" strokeWidth={2} />
+          </span>
+          <span className="hidden min-w-0 flex-col gap-0.5 text-left sm:flex">
+            <span className="truncate text-sm font-bold leading-none text-slate-900">
+              {displayName}
+            </span>
+            <span className="truncate text-xs font-normal leading-tight text-slate-500">
+              {displayEmail}
+            </span>
+          </span>
+          <ChevronDown
+            className={`h-4 w-4 shrink-0 text-slate-400 transition-transform duration-200 ${menuOpen ? 'rotate-180' : ''}`}
+            strokeWidth={2}
+            aria-hidden
+          />
         </button>
 
         {menuOpen ? (
-          <div className="absolute right-4 top-14 z-30 w-48 rounded-xl border border-app-border bg-white p-1.5 shadow-elevated lg:right-6">
-            <div className="border-b border-slate-100 px-2 py-1.5">
-              <p className="truncate text-xs text-slate-500">{user?.email || 'Signed in'}</p>
+          <div
+            className="absolute right-0 top-[calc(100%+10px)] z-30 w-[min(100vw-2rem,15rem)] overflow-hidden rounded-xl border border-slate-200 bg-white shadow-[0_10px_40px_-10px_rgba(15,23,42,0.18)]"
+            role="menu"
+          >
+            <div className="border-b border-slate-100 px-4 py-3 sm:hidden">
+              <p className="truncate text-sm font-bold text-slate-900">{displayName}</p>
+              <p className="truncate text-xs text-slate-500">{displayEmail}</p>
             </div>
 
             <Link
               to="/profile"
+              role="menuitem"
               onClick={() => setMenuOpen(false)}
-              className="mt-1 inline-flex w-full items-center rounded-lg px-2.5 py-2 text-sm text-slate-700 transition hover:bg-slate-100"
+              className={`${menuItemClass} border-b border-slate-100 sm:rounded-t-xl`}
             >
-              <UserCircle2 className="mr-2 h-4 w-4" />
+              <User className="h-[18px] w-[18px] shrink-0 text-slate-500" strokeWidth={1.75} />
               Profile
             </Link>
 
             <Link
               to="/settings"
+              role="menuitem"
               onClick={() => setMenuOpen(false)}
-              className="inline-flex w-full items-center rounded-lg px-2.5 py-2 text-sm text-slate-700 transition hover:bg-slate-100"
+              className={`${menuItemClass} border-b border-slate-100`}
             >
-              <Settings className="mr-2 h-4 w-4" />
+              <Settings className="h-[18px] w-[18px] shrink-0 text-slate-500" strokeWidth={1.75} />
               Settings
             </Link>
 
-            <Button
+            <button
               type="button"
-              variant="ghost"
-              size="sm"
-              className="w-full justify-start font-normal text-red-600 hover:bg-red-50 hover:text-red-700"
+              role="menuitem"
               onClick={handleLogout}
               disabled={loggingOut}
+              className={`${menuItemClass} rounded-b-xl text-red-600 hover:bg-red-50 hover:text-red-700 disabled:opacity-60`}
             >
-              <LogOut className="mr-2 h-4 w-4" />
-              {loggingOut ? 'Signing out...' : 'Log out'}
-            </Button>
+              {loggingOut ? (
+                <Spinner size="sm" className="h-[18px] w-[18px] shrink-0" />
+              ) : (
+                <LogOut className="h-[18px] w-[18px] shrink-0" strokeWidth={1.75} />
+              )}
+              Log out
+            </button>
           </div>
         ) : null}
       </div>

@@ -16,7 +16,6 @@ function EntityListCard({
   className = '',
   headerGridClass = 'grid-cols-[2.4fr_1fr_1fr_1fr_44px]',
 }) {
-  console.log("rows", rows);
   return (
     <section className={`space-y-3 rounded-2xl border border-app-border bg-slate-100 p-4 shadow-card ${className}`}>
       {children ? <div>{children}</div> : null}
@@ -30,7 +29,7 @@ function EntityListCard({
       <div className="space-y-3">
         {isLoading ? (
           <div className="flex min-h-40 items-center justify-center gap-2 rounded-2xl bg-white">
-            <HashHubLoader size="sm" label="Loading..." />
+            <HashHubLoader size="sm" />
           </div>
         ) : isEmpty ? (
           <div className="flex min-h-40 items-center justify-center rounded-2xl bg-white text-slate-500">

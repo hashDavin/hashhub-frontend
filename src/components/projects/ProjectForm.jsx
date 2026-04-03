@@ -1,4 +1,5 @@
 import Button from '@/components/ui/Button'
+import Spinner from '@/components/ui/Spinner'
 import TextInput from '@/components/forms/TextInput'
 import { PROJECT_STATUS_OPTIONS } from '@/constants/project'
 
@@ -55,7 +56,10 @@ function ProjectForm({ initial = {}, onSubmit, onCancel, submitLabel = 'Save', i
           </Button>
         ) : null}
         <Button type="submit" disabled={isSubmitting}>
-          {isSubmitting ? 'Saving…' : submitLabel}
+          <span className="inline-flex items-center gap-2">
+            {isSubmitting ? <Spinner size="sm" /> : null}
+            {submitLabel}
+          </span>
         </Button>
       </div>
     </form>

@@ -1,11 +1,8 @@
-import HashHubLoader from '@/components/common/HashHubLoader'
+import LoaderBackdrop from '@/components/common/LoaderBackdrop'
 
-function PageLoader({ label = 'Loading…' }) {
-  return (
-    <div className="flex min-h-[50vh] flex-col items-center justify-center gap-3 text-slate-500">
-      <HashHubLoader label={label} />
-    </div>
-  )
+/** Auth hydrate & route Suspense — under global API loader z-index. */
+function PageLoader() {
+  return <LoaderBackdrop zClass="z-[9997]" spinnerSize="md" />
 }
 
 export default PageLoader

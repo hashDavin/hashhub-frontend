@@ -7,7 +7,7 @@ function RequireAuth({ children }) {
   const location = useLocation()
 
   if (!hydrated) {
-    return <PageLoader label="Loading…" />
+    return <PageLoader />
   }
 
   if (!token || !user) {

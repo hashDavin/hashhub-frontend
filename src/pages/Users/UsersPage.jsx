@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import { Eye, Funnel, MoreVertical, Pencil, Trash2, X } from 'lucide-react'
+import { Eye, MoreVertical, Pencil, Trash2 } from 'lucide-react'
 import { useAuth } from '@/hooks/useAuth'
 import { ROLES } from '@/constants/roles'
 import PageHeader from '@/components/common/PageHeader'
@@ -12,7 +12,7 @@ import { userService } from '@/services/userService'
 import { getErrorMessage } from '@/utils/errorMessage'
 import EmployeeFormModal from '@/components/users/EmployeeFormModal'
 import EntityListCard from '@/components/common/EntityListCard'
-import SvgIcon from '@/components/ui/SvgIcon'
+
 function formatDate(value) {
   if (!value) return '-'
   const date = new Date(value)
@@ -40,7 +40,6 @@ function UsersPage() {
   const [debouncedSearch, setDebouncedSearch] = useState('')
   const [sort, setSort] = useState('newest')
   const [avatarFilter, setAvatarFilter] = useState('all')
-  const [showFilters, setShowFilters] = useState(false)
   const [openMenuId, setOpenMenuId] = useState(null)
   const [openCreate, setOpenCreate] = useState(false)
   const [viewEmployee, setViewEmployee] = useState(null)
@@ -155,7 +154,8 @@ function UsersPage() {
       await userService.deleteEmployee(deleteEmployee.id)
       toast.success('Team member deleted successfully.')
       setDeleteEmployee(null)
-      const page = employees.length === 1 && meta.current_page > 1 ? meta.current_page - 1 : meta.current_page
+      const page =
+        employees.length === 1 && meta.current_page > 1 ? meta.current_page - 1 : meta.current_page
       await loadEmployees(page)
     } catch (err) {
       toast.error(getErrorMessage(err, 'Failed to delete team member.'))
@@ -192,20 +192,69 @@ function UsersPage() {
     return `${start}-${end} of ${meta.total}`
   }, [meta.current_page, meta.per_page, meta.total])
 
+  const activeFilterCount = useMemo(() => {
+    let n = 0
+    if (sort !== 'newest') n += 1
+    if (avatarFilter !== 'all') n += 1
+    return n
+  }, [sort, avatarFilter])
+
+  const handleClearFilters = () => {
+    setSort('newest')
+    setAvatarFilter('all')
+  }
+
   return (
     <div className="space-y-6">
       <PageHeader
-        title={`Team (${meta.total})`}
+        title="Team"
+        search={{
+          value: search,
+          onChange: setSearch,
+          placeholder: 'Search team member',
+        }}
+        filters={{
+          children: (
+            <div className="grid gap-4 sm:grid-cols-2">
+              <label htmlFor="team-sort-filter" className="block space-y-1.5">
+                <span className="text-xs font-medium text-slate-600">Sort by joined</span>
+                <select
+                  id="team-sort-filter"
+                  className="h-10 w-full rounded-lg border border-slate-200 bg-white px-3 text-sm text-slate-900 outline-none focus:border-brand focus:ring-2 focus:ring-brand/20"
+                  value={sort}
+                  onChange={(e) => setSort(e.target.value)}
+                >
+                  <option value="newest">Newest</option>
+                  <option value="oldest">Oldest</option>
+                </select>
+              </label>
+              <label htmlFor="team-photo-filter" className="block space-y-1.5">
+                <span className="text-xs font-medium text-slate-600">Photo</span>
+                <select
+                  id="team-photo-filter"
+                  className="h-10 w-full rounded-lg border border-slate-200 bg-white px-3 text-sm text-slate-900 outline-none focus:border-brand focus:ring-2 focus:ring-brand/20"
+                  value={avatarFilter}
+                  onChange={(e) => setAvatarFilter(e.target.value)}
+                >
+                  <option value="all">All</option>
+                  <option value="with">With photo</option>
+                  <option value="without">Without photo</option>
+                </select>
+              </label>
+            </div>
+          ),
+          onClear: handleClearFilters,
+          activeCount: activeFilterCount,
+        }}
         action={
-          <Button type="button" variant="primary" onClick={() => setOpenCreate(true)} iconPosition="left">
-            <SvgIcon name="plus" className="h-4 w-4" />
-            Create
+          <Button type="button" variant="primary" onClick={() => setOpenCreate(true)}>
+            Create New
           </Button>
         }
       />
 
       <EntityListCard
-        headers={['Team', 'Projects', 'Joined', 'Status',]}
+        headers={['Team', 'Projects', 'Joined', 'Status']}
         headerGridClass="grid-cols-[2.4fr_1fr_1fr_1fr_1fr_44px]"
         isLoading={loading}
         isEmpty={employees.length === 0}
@@ -222,7 +271,11 @@ function UsersPage() {
           >
             <div className="flex items-center gap-3">
               {employee.avatar_url ? (
-                <img src={`${import.meta.env.VITE_IMAGE_BASE_URL}${employee.avatar_url}`} alt={employee.name} className="h-11 w-11 rounded-full object-cover" />
+                <img
+                  src={`${import.meta.env.VITE_IMAGE_BASE_URL}${employee.avatar_url}`}
+                  alt={employee.name}
+                  className="h-11 w-11 rounded-full object-cover"
+                />
               ) : (
                 <div className="inline-flex h-11 w-11 items-center justify-center rounded-full bg-brand-soft text-sm font-semibold text-brand">
                   {getInitials(employee.name)}
@@ -291,66 +344,7 @@ function UsersPage() {
             </div>
           </div>
         ))}
-      >
-        <div className="flex items-center justify-end">
-          <div className="relative flex items-center gap-2">
-            <div className="relative">
-              <input
-                type="text"
-                placeholder="Search team member"
-                className="h-10 rounded-lg border border-app-border bg-white px-3 pr-9 text-sm outline-none focus:border-brand"
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-              />
-              {search ? (
-                <button
-                  type="button"
-                  onClick={() => setSearch('')}
-                  className="absolute inset-y-0 right-1 inline-flex w-8 items-center justify-center text-slate-400 hover:text-slate-700"
-                  aria-label="Clear search"
-                >
-                  <X className="h-4 w-4" />
-                </button>
-              ) : null}
-            </div>
-            {/* <button
-              type="button"
-              onClick={() => setShowFilters((prev) => !prev)}
-              className="inline-flex h-10 w-10 items-center justify-center rounded-lg border border-app-border bg-white text-slate-600 hover:text-slate-900"
-              aria-label="Toggle filters"
-            >
-              <Funnel className="h-4 w-4" />
-            </button> */}
-            {/* {showFilters ? (
-              <div className="absolute right-0 top-12 z-20 w-56 space-y-3 rounded-lg border border-app-border bg-white p-3 shadow-elevated">
-                <label className="block space-y-1 text-xs text-slate-600">
-                  <span>Sort by joined</span>
-                  <select
-                    className="h-9 w-full rounded-lg border border-app-border px-2 text-sm"
-                    value={sort}
-                    onChange={(e) => setSort(e.target.value)}
-                  >
-                    <option value="newest">Newest</option>
-                    <option value="oldest">Oldest</option>
-                  </select>
-                </label>
-                <label className="block space-y-1 text-xs text-slate-600">
-                  <span>Photo</span>
-                  <select
-                    className="h-9 w-full rounded-lg border border-app-border px-2 text-sm"
-                    value={avatarFilter}
-                    onChange={(e) => setAvatarFilter(e.target.value)}
-                  >
-                    <option value="all">All</option>
-                    <option value="with">With photo</option>
-                    <option value="without">Without photo</option>
-                  </select>
-                </label>
-              </div>
-            ) : null} */}
-          </div>
-        </div>
-      </EntityListCard>
+      />
 
       <EmployeeFormModal
         open={openCreate}
@@ -361,14 +355,28 @@ function UsersPage() {
         onSubmit={handleCreateEmployee}
       />
 
-      <ModalShell open={!!viewEmployee} onClose={() => setViewEmployee(null)} title="Team member details">
+      <ModalShell
+        open={!!viewEmployee}
+        onClose={() => setViewEmployee(null)}
+        title="Team member details"
+      >
         {viewEmployee ? (
           <div className="space-y-2 text-sm">
-            <p><span className="text-slate-500">Name:</span> {viewEmployee.name}</p>
-            <p><span className="text-slate-500">Email:</span> {viewEmployee.email}</p>
-            <p><span className="text-slate-500">Role:</span> {viewEmployee.role?.replace('_', ' ')}</p>
-            <p><span className="text-slate-500">Projects:</span> {viewEmployee.projects_count ?? 0}</p>
-            <p><span className="text-slate-500">Joined:</span> {formatDate(viewEmployee.created_at)}</p>
+            <p>
+              <span className="text-slate-500">Name:</span> {viewEmployee.name}
+            </p>
+            <p>
+              <span className="text-slate-500">Email:</span> {viewEmployee.email}
+            </p>
+            <p>
+              <span className="text-slate-500">Role:</span> {viewEmployee.role?.replace('_', ' ')}
+            </p>
+            <p>
+              <span className="text-slate-500">Projects:</span> {viewEmployee.projects_count ?? 0}
+            </p>
+            <p>
+              <span className="text-slate-500">Joined:</span> {formatDate(viewEmployee.created_at)}
+            </p>
           </div>
         ) : null}
       </ModalShell>
@@ -386,7 +394,9 @@ function UsersPage() {
       <ConfirmationModal
         open={!!deleteEmployee}
         title="Delete Team Member"
-        message={deleteEmployee ? `Delete ${deleteEmployee.name}? This action cannot be undone.` : ''}
+        message={
+          deleteEmployee ? `Delete ${deleteEmployee.name}? This action cannot be undone.` : ''
+        }
         onConfirm={handleDeleteEmployee}
         onCancel={() => (deleteLoading ? null : setDeleteEmployee(null))}
         confirmLabel="Delete"

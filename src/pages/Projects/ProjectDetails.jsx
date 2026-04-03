@@ -9,12 +9,10 @@ import Button from '@/components/ui/Button'
 import HashHubLoader from '@/components/common/HashHubLoader'
 import { useProjectDetailsPage } from '@/hooks/useProjectDetailsPage'
 import { useProjectPermissions } from '@/hooks/useProjectPermissions'
-import { useState } from 'react'
 
 function ProjectDetails() {
   const { canManageProjects, canAddCredentials, isSuperAdmin } = useProjectPermissions()
   const {
-    id,
     navigate,
     project,
     members,
@@ -47,7 +45,7 @@ function ProjectDetails() {
   if (loading) {
     return (
       <div className="flex min-h-[40vh] flex-col items-center justify-center gap-3 text-slate-500">
-        <HashHubLoader label="Loading project..." />
+        <HashHubLoader />
       </div>
     )
   }

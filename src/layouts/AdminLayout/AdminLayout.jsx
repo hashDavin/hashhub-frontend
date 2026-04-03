@@ -1,4 +1,4 @@
-import { Suspense, useMemo, useState } from 'react'
+import { Suspense, useEffect, useMemo, useState } from 'react'
 import { Outlet, useMatches } from 'react-router-dom'
 import Sidebar from '@/layouts/AdminLayout/components/Sidebar'
 import Header from '@/layouts/AdminLayout/components/Header'
@@ -7,7 +7,6 @@ import { ROLES } from '@/constants/roles'
 import { useAuth } from '@/hooks/useAuth'
 
 function AdminLayout() {
-  const [collapsed, setCollapsed] = useState(false)
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false)
   const matches = useMatches()
   const { user } = useAuth()
@@ -16,6 +15,10 @@ function AdminLayout() {
     const matched = matches.at(-1)
     return matched?.handle?.title || 'HashHub'
   }, [matches])
+
+  useEffect(() => {
+    document.title = `${title} · HashHub`
+  }, [title])
 
   return (
     <div className="min-h-screen bg-white">
@@ -29,22 +32,17 @@ function AdminLayout() {
       ) : null}
 
       <div
-        className={`fixed inset-y-0 left-0 z-40 w-64 transition-transform lg:translate-x-0 ${
+        className={`fixed inset-y-0 left-0 z-40 w-56 transition-transform lg:translate-x-0 ${
           mobileSidebarOpen ? 'translate-x-0' : '-translate-x-full'
-        } ${collapsed ? 'lg:w-20' : 'lg:w-64'}`}
+        } lg:w-56`}
       >
-        <Sidebar
-          role={role}
-          collapsed={collapsed}
-          onToggleCollapse={() => setCollapsed((prev) => !prev)}
-          onCloseMobile={() => setMobileSidebarOpen(false)}
-        />
+        <Sidebar role={role} onCloseMobile={() => setMobileSidebarOpen(false)} />
       </div>
 
-      <div className={`${collapsed ? 'lg:pl-20' : 'lg:pl-64'}`}>
-        <Header title={title} onToggleMobileSidebar={() => setMobileSidebarOpen(true)} />
+      <div className="lg:pl-56">
+        <Header onToggleMobileSidebar={() => setMobileSidebarOpen(true)} />
         <main className="w-full p-4 lg:p-6 bg-white">
-          <Suspense fallback={<PageLoader label="Loading page…" />}>
+          <Suspense fallback={<PageLoader />}>
             <Outlet />
           </Suspense>
         </main>
