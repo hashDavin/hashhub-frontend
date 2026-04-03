@@ -1,15 +1,18 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
-import { Eye, Pencil, Trash2 } from 'lucide-react'
+import { Eye, Pencil, Trash2, UserPlus, KeyRound } from 'lucide-react'
 import PageHeader from '@/components/common/PageHeader'
 import DataTable from '@/components/tables/DataTable'
 import ConfirmationModal from '@/components/modals/ConfirmationModal'
 import ModalShell from '@/components/modals/ModalShell'
 import ProjectForm from '@/components/projects/ProjectForm'
+import AssignUserModal from '@/components/projects/AssignUserModal'
+import CredentialsModal from '@/components/projects/CredentialsModal'
 import Button from '@/components/ui/Button'
 import StatusSwitch from '@/components/ui/StatusSwitch'
 import { useToast } from '@/components/notifications/ToastProvider'
 import { useProjectPermissions } from '@/hooks/useProjectPermissions'
+import { projectService } from '@/services/projectService'
 import { getErrorMessage } from '@/utils/errorMessage'
 import {
   useGetProjectsQuery,
@@ -35,6 +38,12 @@ function ProjectList() {
   const [editSubmitting, setEditSubmitting] = useState(false)
   const [deleteTarget, setDeleteTarget] = useState(null)
   const [deleteLoading, setDeleteLoading] = useState(false)
+  const [assignTarget, setAssignTarget] = useState(null)
+  const [assignOpen, setAssignOpen] = useState(false)
+  const [assignSubmitting, setAssignSubmitting] = useState(false)
+  const [assignMembersLoading, setAssignMembersLoading] = useState(false)
+  const [assignedIds, setAssignedIds] = useState([])
+  const [credProject, setCredProject] = useState(null)
 
   const perPage = 15
 
@@ -44,6 +53,7 @@ function ProjectList() {
     isFetching,
     isError,
     error: listError,
+    refetch,
   } = useGetProjectsQuery({
     page,
     per_page: perPage,
@@ -161,6 +171,35 @@ function ProjectList() {
               <>
                 <button
                   type="button"
+                  onClick={() => setCredProject(project)}
+                  className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-slate-500 hover:bg-slate-100 hover:text-brand"
+                  aria-label={`Manage credentials for ${project.name}`}
+                >
+                  <KeyRound className="h-4 w-4" />
+                </button>
+                <button
+                  type="button"
+                  onClick={async () => {
+                    setAssignTarget(project)
+                    setAssignOpen(true)
+                    setAssignMembersLoading(true)
+                    try {
+                      const { items: members } = await projectService.listMembers(project.id, { per_page: 100 })
+                      setAssignedIds(members.map((u) => u.id))
+                    } catch (err) {
+                      setAssignedIds([])
+                      toast.error(getErrorMessage(err, 'Failed to load assigned members.'))
+                    } finally {
+                      setAssignMembersLoading(false)
+                    }
+                  }}
+                  className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-slate-500 hover:bg-slate-100 hover:text-brand"
+                  aria-label={`Assign members to ${project.name}`}
+                >
+                  <UserPlus className="h-4 w-4" />
+                </button>
+                <button
+                  type="button"
                   onClick={() => {
                     setEditTarget(project)
                   }}
@@ -229,6 +268,23 @@ function ProjectList() {
       toast.error(getErrorMessage(err, 'Failed to update project.'))
     } finally {
       setEditSubmitting(false)
+    }
+  }
+
+  const handleAssignMembers = async (userIds) => {
+    if (!assignTarget) return
+    setAssignSubmitting(true)
+    try {
+      await projectService.assignUsers(assignTarget.id, userIds)
+      toast.success('Members assigned successfully.')
+      setAssignOpen(false)
+      setAssignTarget(null)
+      setAssignedIds([])
+      await refetch()
+    } catch (err) {
+      toast.error(getErrorMessage(err, 'Failed to assign members.'))
+    } finally {
+      setAssignSubmitting(false)
     }
   }
 
@@ -304,6 +360,26 @@ function ProjectList() {
           submitLabel="Save changes"
         />
       </ModalShell>
+      <AssignUserModal
+        open={assignOpen}
+        onClose={() => {
+          if (assignSubmitting) return
+          setAssignOpen(false)
+          setAssignTarget(null)
+          setAssignedIds([])
+          setAssignMembersLoading(false)
+        }}
+        onAssign={handleAssignMembers}
+        assignedUserIds={assignedIds}
+        isSubmitting={assignSubmitting}
+        loadingMembers={assignMembersLoading}
+      />
+      <CredentialsModal
+        open={!!credProject}
+        onClose={() => setCredProject(null)}
+        projectId={credProject?.id}
+        canAdd={canManageProjects}
+      />
     </div>
   )
 }

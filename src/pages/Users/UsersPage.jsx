@@ -232,7 +232,7 @@ function UsersPage() {
       {
         key: 'projects_count',
         header: 'Projects Assigned',
-        className: 'w-24',
+        className: 'w-32',
         render: (row) => (
           <span className="tabular-nums text-slate-700">{row.projects_count ?? 0}</span>
         ),

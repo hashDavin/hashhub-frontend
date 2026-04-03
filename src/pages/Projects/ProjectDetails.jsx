@@ -2,7 +2,6 @@ import PageHeader from '@/components/common/PageHeader'
 import ProjectDetailsCard from '@/components/projects/ProjectDetailsCard'
 import CredentialList from '@/components/projects/CredentialList'
 import CredentialForm from '@/components/projects/CredentialForm'
-import AssignUserModal from '@/components/projects/AssignUserModal'
 import ConfirmationModal from '@/components/modals/ConfirmationModal'
 import ModalShell from '@/components/modals/ModalShell'
 import Button from '@/components/ui/Button'
@@ -19,9 +18,6 @@ function ProjectDetails() {
     credentials,
     loading,
     credLoading,
-    assignOpen,
-    setAssignOpen,
-    assigning,
     credModal,
     setCredModal,
     credSubmitting,
@@ -38,8 +34,6 @@ function ProjectDetails() {
     setMemberToRemove,
     removeMemberLoading,
     confirmRemoveMember,
-    handleAssign,
-    assignedIds,
   } = useProjectDetailsPage()
 
   if (loading) {
@@ -80,11 +74,6 @@ function ProjectDetails() {
       <section className="space-y-3">
         <div className="flex items-center justify-between">
           <h2 className="text-lg font-semibold text-slate-900">Assigned members</h2>
-          {canManageProjects ? (
-            <Button type="button" onClick={() => setAssignOpen(true)} size="sm">
-              Assign users
-            </Button>
-          ) : null}
         </div>
         <ul className="divide-y divide-app-border rounded-xl border border-app-border bg-app-card">
           {members.length === 0 ? (
@@ -115,65 +104,17 @@ function ProjectDetails() {
       <section className="space-y-3">
         <div className="flex items-center justify-between">
           <h2 className="text-lg font-semibold text-slate-900">Credentials</h2>
-          {canAddCredentials ? (
-            <Button
-              type="button"
-              onClick={() => setCredModal({ mode: 'create', row: null })}
-              size="sm"
-            >
-              Add credential
-            </Button>
-          ) : null}
         </div>
         <CredentialList
           items={credentials}
           isLoading={credLoading}
-          canManage={isSuperAdmin}
-          onEdit={(row) => setCredModal({ mode: 'edit', row })}
-          onDelete={(row) => setDeleteCred(row)}
+          canManage={false}
+          onEdit={() => {}}
+          onDelete={() => {}}
         />
       </section>
 
-      <AssignUserModal
-        open={assignOpen}
-        onClose={() => setAssignOpen(false)}
-        onAssign={handleAssign}
-        assignedUserIds={assignedIds}
-        isSubmitting={assigning}
-      />
-
-      <ModalShell
-        open={!!credModal.mode}
-        title={credModal.mode === 'create' ? 'New credential' : 'Edit credential'}
-        onClose={() => setCredModal({ mode: null, row: null })}
-        wide
-      >
-        <CredentialForm
-          key={credModal.row?.id ?? 'new'}
-          initial={
-            credModal.mode === 'edit' && credModal.row
-              ? {
-                  id: credModal.row.id,
-                  type: credModal.row.type,
-                  title: credModal.row.title,
-                  username: credModal.row.username,
-                  url: credModal.row.url,
-                  repo_url: credModal.row.repo_url,
-                  live_url: credModal.row.live_url,
-                  dev_url: credModal.row.dev_url,
-                  dev_username: credModal.row.dev_username,
-                  notes: credModal.row.notes,
-                  metadata: credModal.row.metadata,
-                  requirement_doc_url: credModal.row.requirement_doc_url,
-                  env_file_url: credModal.row.env_file_url,
-                }
-              : {}
-          }
-          onSubmit={saveCredential}
-          onCancel={() => setCredModal({ mode: null, row: null })}
-          isSubmitting={credSubmitting}
-        />
-      </ModalShell>
+      {/* Credential editing is now managed from the list page. */}
 
       <ConfirmationModal
         open={!!deleteCred}

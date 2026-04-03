@@ -9,7 +9,7 @@ function GlobalLoader() {
     return null
   }
 
-  return <LoaderBackdrop zClass="z-[9998]" spinnerSize="md" />
+  return <LoaderBackdrop zClass="z-[9998]" spinnerSize="md"  />
 }
 
 export default GlobalLoader

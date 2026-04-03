@@ -87,18 +87,16 @@ export const projectService = {
   },
 
   createCredential(projectId, payload) {
-    return apiClient
-      .post(`/projects/${projectId}/details`, payload, {
-        headers: { 'Content-Type': 'multipart/form-data' },
-      })
-      .then((res) => unwrapData(res))
+    const isForm = typeof FormData !== 'undefined' && payload instanceof FormData
+    const config = isForm ? { headers: { 'Content-Type': 'multipart/form-data' } } : undefined
+    return apiClient.post(`/projects/${projectId}/details`, payload, config).then((res) => unwrapData(res))
   },
 
   updateCredential(projectId, detailId, payload) {
+    const isForm = typeof FormData !== 'undefined' && payload instanceof FormData
+    const config = isForm ? { headers: { 'Content-Type': 'multipart/form-data' } } : undefined
     return apiClient
-      .post(`/projects/${projectId}/details/${detailId}?_method=PUT`, payload, {
-        headers: { 'Content-Type': 'multipart/form-data' },
-      })
+      .post(`/projects/${projectId}/details/${detailId}?_method=PUT`, payload, config)
       .then((res) => unwrapData(res))
   },
 

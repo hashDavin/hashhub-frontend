@@ -1,11 +1,11 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
+import { X } from 'lucide-react'
 import Button from '@/components/ui/Button'
-import HashHubLoader from '@/components/common/HashHubLoader'
 import Spinner from '@/components/ui/Spinner'
 import ModalShell from '@/components/modals/ModalShell'
 import { userService } from '@/services/userService'
 
-function AssignUserModal({ open, onClose, onAssign, assignedUserIds = [], isSubmitting }) {
+function AssignUserModal({ open, onClose, onAssign, assignedUserIds = [], isSubmitting, loadingMembers = false }) {
   const [options, setOptions] = useState([])
   const [selected, setSelected] = useState([])
   const [loading, setLoading] = useState(false)
@@ -15,6 +15,7 @@ function AssignUserModal({ open, onClose, onAssign, assignedUserIds = [], isSubm
     if (!open) return
     setLoading(true)
     setSearch('')
+    setSelected([])
     userService
       .list({ per_page: 100 })
       .then(({ items }) => {
@@ -24,11 +25,25 @@ function AssignUserModal({ open, onClose, onAssign, assignedUserIds = [], isSubm
       .finally(() => setLoading(false))
   }, [open, assignedUserIds.join(',')])
 
-  const toggle = (id) => {
-    setSelected((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]))
+  const selectedUsers = useMemo(
+    () => options.filter((u) => selected.includes(u.id)),
+    [options, selected]
+  )
+
+  const availableOptions = useMemo(
+    () => options.filter((u) => !selected.includes(u.id)),
+    [options, selected]
+  )
+
+  const addUser = (id) => {
+    setSelected((prev) => (prev.includes(id) ? prev : [...prev, id]))
   }
 
-  const filteredOptions = options.filter((u) => {
+  const removeUser = (id) => {
+    setSelected((prev) => prev.filter((x) => x !== id))
+  }
+
+  const filteredOptions = availableOptions.filter((u) => {
     const term = search.trim().toLowerCase()
     if (!term) return true
     return u.name?.toLowerCase().includes(term) || u.email?.toLowerCase().includes(term)
@@ -42,39 +57,71 @@ function AssignUserModal({ open, onClose, onAssign, assignedUserIds = [], isSubm
   return (
     <ModalShell open={open} title="Assign members" onClose={onClose} wide>
       <form onSubmit={handleSubmit} className="space-y-4">
-        <p className="text-sm text-slate-600">Select users to add to this project.</p>
-        <input
-          type="text"
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          placeholder="Search user by name or email"
-          className="h-10 w-full rounded-lg border border-app-border px-3 text-sm outline-none focus:border-brand focus:ring-2 focus:ring-brand-soft"
-        />
-        {loading ? (
-          <div className="flex items-center gap-2 py-4 text-sm text-slate-500">
-            <HashHubLoader size="sm" />
+        <p className="text-sm text-slate-600">Select team members to assign to this project.</p>
+        <div className="relative">
+          <input
+            type="text"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Search team member by name or email"
+            className="h-10 w-full rounded-lg border border-app-border px-3 pr-10 text-sm outline-none focus:border-brand focus:ring-2 focus:ring-brand-soft"
+          />
+          {search ? (
+            <button
+              type="button"
+              onClick={() => setSearch('')}
+              className="absolute inset-y-0 right-1 inline-flex w-8 items-center justify-center text-slate-400 hover:text-slate-700"
+              aria-label="Clear search"
+            >
+              <X className="h-4 w-4" />
+            </button>
+          ) : null}
+        </div>
+        {selectedUsers.length > 0 ? (
+          <div className="min-h-[42px] rounded-lg border border-app-border bg-white p-2">
+            <div className="flex flex-wrap gap-2">
+              {selectedUsers.map((u) => (
+                <span
+                  key={`selected-${u.id}`}
+                  className="inline-flex items-center gap-1 rounded-full bg-brand-soft px-2.5 py-1 text-xs font-medium text-brand"
+                >
+                  {u.name}
+                  <button
+                    type="button"
+                    onClick={() => removeUser(u.id)}
+                    className="inline-flex h-4 w-4 items-center justify-center rounded-full hover:bg-brand/20"
+                    aria-label={`Remove ${u.name}`}
+                  >
+                    <X className="h-3 w-3" />
+                  </button>
+                </span>
+              ))}
+            </div>
+          </div>
+        ) : null}
+        {loading || loadingMembers ? (
+          <div className="flex h-36 items-center justify-center rounded-lg border border-app-border p-2 text-sm text-slate-500">
+            <span className="inline-flex items-center gap-2">
+              <Spinner size="sm" />
+              Loading team members...
+            </span>
           </div>
         ) : (
           <div className="max-h-56 space-y-2 overflow-y-auto rounded-lg border border-app-border p-2">
             {filteredOptions.length === 0 ? (
-              <p className="text-sm text-slate-500">No users available to assign.</p>
+              <p className="text-sm text-slate-500">No team members available to assign.</p>
             ) : (
               filteredOptions.map((u) => (
-                <label
+                <button
                   key={u.id}
-                  htmlFor={`assign-user-${u.id}`}
-                  className="flex cursor-pointer items-center gap-2 rounded-md px-2 py-1.5 hover:bg-slate-50"
+                  type="button"
+                  onClick={() => addUser(u.id)}
+                  className="flex w-full items-center justify-between rounded-md px-2 py-1.5 text-left hover:bg-slate-50"
                 >
-                  <input
-                    id={`assign-user-${u.id}`}
-                    type="checkbox"
-                    checked={selected.includes(u.id)}
-                    onChange={() => toggle(u.id)}
-                  />
                   <span className="text-sm text-slate-800">
                     {u.name} <span className="text-slate-500">({u.email})</span>
                   </span>
-                </label>
+                </button>
               ))
             )}
           </div>
