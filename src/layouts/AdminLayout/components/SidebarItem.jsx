@@ -6,14 +6,20 @@ import { clearAuth } from '@/store/authSlice'
 import { authService } from '@/services/authService'
 import { cn } from '@/utils/cn'
 
+function matchesPath(currentPath, targetPath) {
+  if (!targetPath) return false
+  if (targetPath === '/') return currentPath === '/'
+  return currentPath === targetPath || currentPath.startsWith(`${targetPath}/`)
+}
+
 function SidebarItem({ item, collapsed, onNavigate }) {
   const dispatch = useDispatch()
   const navigate = useNavigate()
   const location = useLocation()
   const children = useMemo(() => item.children ?? [], [item.children])
   const hasChildren = children.length > 0
-  const activeChild = children.find((child) => location.pathname === child.path)
-  const isActive = hasChildren ? Boolean(activeChild) : location.pathname === item.path
+  const activeChild = children.find((child) => matchesPath(location.pathname, child.path))
+  const isActive = hasChildren ? Boolean(activeChild) : matchesPath(location.pathname, item.path)
   const [expanded, setExpanded] = useState(isActive)
 
   useEffect(() => {
@@ -65,7 +71,7 @@ function SidebarItem({ item, collapsed, onNavigate }) {
           <div className="space-y-1 pl-4">
             {children.map((child) => {
               const ChildIcon = child.icon
-              const childActive = location.pathname === child.path
+              const childActive = matchesPath(location.pathname, child.path)
               return (
                 <Link
                   key={`${item.label}-${child.label}`}

@@ -7,7 +7,6 @@ import ConfirmationModal from '@/components/modals/ConfirmationModal'
 import ModalShell from '@/components/modals/ModalShell'
 import ProjectForm from '@/components/projects/ProjectForm'
 import AssignUserModal from '@/components/projects/AssignUserModal'
-import CredentialsModal from '@/components/projects/CredentialsModal'
 import Button from '@/components/ui/Button'
 import StatusSwitch from '@/components/ui/StatusSwitch'
 import { useToast } from '@/components/notifications/ToastProvider'
@@ -43,7 +42,6 @@ function ProjectList() {
   const [assignSubmitting, setAssignSubmitting] = useState(false)
   const [assignMembersLoading, setAssignMembersLoading] = useState(false)
   const [assignedIds, setAssignedIds] = useState([])
-  const [credProject, setCredProject] = useState(null)
 
   const perPage = 15
 
@@ -171,7 +169,7 @@ function ProjectList() {
               <>
                 <button
                   type="button"
-                  onClick={() => setCredProject(project)}
+                  onClick={() => navigate(`/projects/${project.id}/credentials`)}
                   className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-slate-500 hover:bg-slate-100 hover:text-brand"
                   aria-label={`Manage credentials for ${project.name}`}
                 >
@@ -373,12 +371,6 @@ function ProjectList() {
         assignedUserIds={assignedIds}
         isSubmitting={assignSubmitting}
         loadingMembers={assignMembersLoading}
-      />
-      <CredentialsModal
-        open={!!credProject}
-        onClose={() => setCredProject(null)}
-        projectId={credProject?.id}
-        canAdd={canManageProjects}
       />
     </div>
   )

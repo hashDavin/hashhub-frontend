@@ -11,6 +11,8 @@ const ProjectList = lazy(() => import('@/pages/Projects/ProjectList'))
 const CreateProject = lazy(() => import('@/pages/Projects/CreateProject'))
 const EditProject = lazy(() => import('@/pages/Projects/EditProject'))
 const ProjectDetails = lazy(() => import('@/pages/Projects/ProjectDetails'))
+const ProjectCredentialsPage = lazy(() => import('@/pages/Projects/ProjectCredentialsPage'))
+const ProjectCredentialsView = lazy(() => import('@/pages/Projects/ProjectCredentialsView'))
 const UsersPage = lazy(() => import('@/pages/Users/UsersPage'))
 const AssignmentsPage = lazy(() => import('@/pages/Assignments/AssignmentsPage'))
 const MyProjectsPage = lazy(() => import('@/pages/MyProjects/MyProjectsPage'))
@@ -46,6 +48,8 @@ const router = createBrowserRouter([
       { path: 'dashboard', element: <DashboardPage />, handle: { title: 'Dashboard' } },
       { path: 'projects/new', element: <CreateProject />, handle: { title: 'New project' } },
       { path: 'projects/:id/edit', element: <EditProject />, handle: { title: 'Edit project' } },
+      { path: 'projects/:id/credentials', element: <ProjectCredentialsPage />, handle: { title: 'Credentials' } },
+      { path: 'projects/:id/credentials/view', element: <ProjectCredentialsView />, handle: { title: 'View credentials' } },
       { path: 'projects/:id', element: <ProjectDetails />, handle: { title: 'Project' } },
       { path: 'projects', element: <ProjectList />, handle: { title: 'Projects' } },
       { path: 'employees', element: <UsersPage />, handle: { title: 'Team' } },

@@ -4,12 +4,14 @@ function statusLabel(value) {
   return PROJECT_STATUS_OPTIONS.find((o) => o.value === value)?.label ?? value
 }
 
-function ProjectDetailsCard({ project }) {
+function ProjectDetailsCard({ project, onManageCredentials }) {
   if (!project) return null
 
   return (
     <section className="rounded-xl border border-app-border bg-app-card p-6 shadow-card">
-      <h2 className="text-lg font-semibold text-slate-900">Project overview</h2>
+      <div className="flex items-start justify-between gap-3">
+        <h2 className="text-lg font-semibold text-slate-900">Project overview</h2>
+      </div>
       <dl className="mt-4 grid gap-3 text-sm sm:grid-cols-2">
         <div>
           <dt className="text-slate-500">Name</dt>

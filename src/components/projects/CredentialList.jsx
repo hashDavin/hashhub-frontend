@@ -8,7 +8,7 @@ function typeLabel(value) {
   return CREDENTIAL_TYPE_OPTIONS.find((o) => o.value === value)?.label ?? value
 }
 
-function CredentialRow({ row, canManage, onEdit, onDelete }) {
+function CredentialRow({ row, canManage, onView, onEdit, onDelete }) {
   const [showSecret, setShowSecret] = useState(false)
   const hasSecret = row.password_set
 
@@ -45,6 +45,16 @@ function CredentialRow({ row, canManage, onEdit, onDelete }) {
               type="button"
               variant="ghost"
               size="icon"
+              onClick={() => onView(row)}
+              title="View"
+              aria-label={`View ${row.title}`}
+            >
+              <Eye className="h-4 w-4" />
+            </Button>
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon"
               onClick={() => onEdit(row)}
               title="Edit"
               aria-label={`Edit ${row.title}`}
@@ -68,7 +78,7 @@ function CredentialRow({ row, canManage, onEdit, onDelete }) {
   )
 }
 
-function CredentialListBody({ items, isLoading, canManage, onEdit, onDelete }) {
+function CredentialListBody({ items, isLoading, canManage, onView, onEdit, onDelete }) {
   if (isLoading) {
     return (
       <tr>
@@ -94,13 +104,14 @@ function CredentialListBody({ items, isLoading, canManage, onEdit, onDelete }) {
       key={row.id}
       row={row}
       canManage={canManage}
+      onView={onView}
       onEdit={onEdit}
       onDelete={onDelete}
     />
   ))
 }
 
-function CredentialList({ items, isLoading, canManage, onEdit, onDelete }) {
+function CredentialList({ items, isLoading, canManage, onView, onEdit, onDelete }) {
   return (
     <div className="overflow-x-auto rounded-xl border border-app-border bg-app-card shadow-card">
       <table className="w-full min-w-[560px] text-left text-sm">

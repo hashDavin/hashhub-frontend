@@ -92,6 +92,16 @@ export const projectService = {
     return apiClient.post(`/projects/${projectId}/details`, payload, config).then((res) => unwrapData(res))
   },
 
+  createCredentialBulk(projectId, payload) {
+    const isForm = typeof FormData !== 'undefined' && payload instanceof FormData
+    const config = isForm ? { headers: { 'Content-Type': 'multipart/form-data' } } : undefined
+    return apiClient.post(`/projects/${projectId}/details/bulk`, payload, config).then((res) => unwrapData(res))
+  },
+
+  listCredentialsGrouped(projectId) {
+    return apiClient.get(`/projects/${projectId}/details-grouped`).then((res) => unwrapPaginated(res))
+  },
+
   updateCredential(projectId, detailId, payload) {
     const isForm = typeof FormData !== 'undefined' && payload instanceof FormData
     const config = isForm ? { headers: { 'Content-Type': 'multipart/form-data' } } : undefined
