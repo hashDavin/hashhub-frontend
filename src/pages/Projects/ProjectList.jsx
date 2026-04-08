@@ -143,7 +143,7 @@ function ProjectList() {
       },
       {
         key: 'assigned',
-        header: 'Assigned',
+        header: 'Assigned Members',
         className: 'w-28',
         render: (project) => (
           <span className="tabular-nums text-slate-700">{project.assigned_users_count ?? 0}</span>

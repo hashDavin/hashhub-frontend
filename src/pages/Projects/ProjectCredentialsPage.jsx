@@ -308,7 +308,7 @@ function ProjectCredentialsPage() {
 
   if (loading) {
     return (
-      <div>
+      <div className="flex min-h-[50vh] items-center justify-center">
         <HashHubLoader />
       </div>
     )

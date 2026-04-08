@@ -1,8 +1,12 @@
-import LoaderBackdrop from '@/components/common/LoaderBackdrop'
+import HashHubLoader from '@/components/common/HashHubLoader'
 
-/** Auth hydrate & route Suspense — under global API loader z-index. */
+/** Lightweight route fallback; avoids full-screen blocking overlay. */
 function PageLoader() {
-  return <LoaderBackdrop zClass="z-[9997]" spinnerSize="md" />
+  return (
+    <div className="flex min-h-[220px] items-center justify-center">
+      <HashHubLoader size="sm" />
+    </div>
+  )
 }
 
 export default PageLoader

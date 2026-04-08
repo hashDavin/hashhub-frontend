@@ -1,5 +1,5 @@
 import { useSelector } from 'react-redux'
-import LoaderBackdrop from '@/components/common/LoaderBackdrop'
+import Spinner from '@/components/ui/Spinner'
 import { selectGlobalLoaderPending } from '@/store/globalLoaderSlice'
 
 function GlobalLoader() {
@@ -9,7 +9,11 @@ function GlobalLoader() {
     return null
   }
 
-  return <LoaderBackdrop zClass="z-[9998]" spinnerSize="md"  />
+  return (
+    <div className="pointer-events-none fixed right-4 top-4 z-[9998] rounded-full border border-app-border bg-white/95 p-2 shadow-sm">
+      <Spinner size="sm" />
+    </div>
+  )
 }
 
 export default GlobalLoader
